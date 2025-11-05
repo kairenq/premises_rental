@@ -7,7 +7,7 @@ import {
   DashboardOutlined,
   LogoutOutlined,
   LoginOutlined,
-  BuildingOutlined,
+  ShopOutlined,
   FileTextOutlined,
   ToolOutlined,
   HeartOutlined,
@@ -49,7 +49,7 @@ const Layout = ({ children }) => {
         },
         {
           key: '/rooms',
-          icon: <BuildingOutlined />,
+          icon: <ShopOutlined />,
           label: <Link to="/rooms">Rooms</Link>,
         },
         ...(user.role === 'admin'
@@ -86,7 +86,7 @@ const Layout = ({ children }) => {
         },
         {
           key: '/rooms',
-          icon: <BuildingOutlined />,
+          icon: <ShopOutlined />,
           label: <Link to="/rooms">Rooms</Link>,
         },
       ];

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Row, Col, Button, Statistic } from 'antd';
 import {
-  BuildingOutlined,
+  ShopOutlined,
   HomeOutlined,
   UserOutlined,
   FileTextOutlined,
@@ -47,7 +47,7 @@ const Home = () => {
             <Statistic
               title="Available Rooms"
               value={45}
-              prefix={<BuildingOutlined />}
+              prefix={<ShopOutlined />}
               valueStyle={{ color: '#3f8600' }}
             />
           </Card>
@@ -98,7 +98,7 @@ const Home = () => {
                   justifyContent: 'center',
                 }}
               >
-                <BuildingOutlined style={{ fontSize: 64, color: '#1890ff' }} />
+                <ShopOutlined style={{ fontSize: 64, color: '#1890ff' }} />
               </div>
             }
           >
