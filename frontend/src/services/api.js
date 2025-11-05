@@ -105,4 +105,9 @@ export const maintenanceAPI = {
   delete: (id) => api.delete(`/maintenance/${id}`),
 };
 
+// Statistics API
+export const statsAPI = {
+  getStats: () => api.get('/stats'),
+};
+
 export default api;

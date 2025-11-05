@@ -13,10 +13,10 @@ const Login = () => {
     setLoading(true);
     try {
       await login(values.email, values.password);
-      message.success('Login successful!');
+      message.success('Вход выполнен успешно!');
       navigate('/');
     } catch (error) {
-      message.error(error.response?.data?.detail || 'Login failed');
+      message.error(error.response?.data?.detail || 'Ошибка входа. Проверьте данные.');
     } finally {
       setLoading(false);
     }
@@ -31,13 +31,13 @@ const Login = () => {
         minHeight: '80vh',
       }}
     >
-      <Card title="Login" style={{ width: 400 }}>
+      <Card title="Вход в систему" style={{ width: 400 }}>
         <Form name="login" onFinish={onFinish} layout="vertical">
           <Form.Item
             name="email"
             rules={[
-              { required: true, message: 'Please input your email!' },
-              { type: 'email', message: 'Please enter a valid email!' },
+              { required: true, message: 'Введите ваш email!' },
+              { type: 'email', message: 'Введите корректный email!' },
             ]}
           >
             <Input
@@ -49,11 +49,11 @@ const Login = () => {
 
           <Form.Item
             name="password"
-            rules={[{ required: true, message: 'Please input your password!' }]}
+            rules={[{ required: true, message: 'Введите пароль!' }]}
           >
             <Input.Password
               prefix={<LockOutlined />}
-              placeholder="Password"
+              placeholder="Пароль"
               size="large"
             />
           </Form.Item>
@@ -66,12 +66,12 @@ const Login = () => {
               block
               size="large"
             >
-              Log in
+              Войти
             </Button>
           </Form.Item>
 
           <div style={{ textAlign: 'center' }}>
-            Don't have an account? <Link to="/register">Register now!</Link>
+            Нет аккаунта? <Link to="/register">Зарегистрируйтесь!</Link>
           </div>
         </Form>
       </Card>

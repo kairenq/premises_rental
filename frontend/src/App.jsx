@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
+import ruRU from 'antd/locale/ru_RU';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Layout from './components/Layout';
 import Home from './pages/Home';
@@ -14,7 +15,7 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div style={{ textAlign: 'center', padding: 50 }}>Loading...</div>;
+    return <div style={{ textAlign: 'center', padding: 50 }}>Загрузка...</div>;
   }
 
   if (!user) {
@@ -30,13 +31,38 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
 
 // App Routes Component
 const AppRoutes = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div style={{ textAlign: 'center', padding: 50 }}>Загрузка...</div>;
+  }
+
+  // Redirect to login if not authenticated
+  if (!user && !['/login', '/register'].includes(window.location.pathname)) {
+    return <Navigate to="/login" replace />;
+  }
+
   return (
     <Layout>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/rooms" element={<Rooms />} />
+        <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+        <Route path="/register" element={user ? <Navigate to="/" replace /> : <Register />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/rooms"
+          element={
+            <ProtectedRoute>
+              <Rooms />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/admin"
           element={
@@ -45,7 +71,7 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<Navigate to={user ? "/" : "/login"} replace />} />
       </Routes>
     </Layout>
   );
@@ -54,6 +80,7 @@ const AppRoutes = () => {
 function App() {
   return (
     <ConfigProvider
+      locale={ruRU}
       theme={{
         token: {
           colorPrimary: '#667eea',

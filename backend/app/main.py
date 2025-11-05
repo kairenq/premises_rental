@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from .core.config import settings
 from .db.database import engine, Base
-from .api import auth, rooms, companies, buildings, leases, reviews, maintenance
+from .api import auth, rooms, companies, buildings, leases, reviews, maintenance, stats
 import os
 
 # Create database tables
@@ -52,6 +52,7 @@ app.include_router(buildings.router, prefix=settings.API_V1_STR)
 app.include_router(leases.router, prefix=settings.API_V1_STR)
 app.include_router(reviews.router, prefix=settings.API_V1_STR)
 app.include_router(maintenance.router, prefix=settings.API_V1_STR)
+app.include_router(stats.router, prefix=settings.API_V1_STR)
 
 
 @app.get("/")

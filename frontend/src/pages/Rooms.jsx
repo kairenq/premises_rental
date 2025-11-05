@@ -60,7 +60,7 @@ const Rooms = () => {
       const response = await roomsAPI.getAll(filters);
       setRooms(response.data);
     } catch (error) {
-      message.error('Failed to fetch rooms');
+      message.error('Не удалось загрузить помещения');
     } finally {
       setLoading(false);
     }
@@ -86,7 +86,7 @@ const Rooms = () => {
 
   const toggleFavorite = async (roomId) => {
     if (!user) {
-      message.warning('Please login to add favorites');
+      message.warning('Пожалуйста, войдите, чтобы добавить в избранное');
       return;
     }
 
@@ -97,14 +97,14 @@ const Rooms = () => {
         const favorite = favoriteItem.data.find((f) => f.room_id === roomId);
         await favoritesAPI.remove(favorite.favorite_id);
         setFavorites(favorites.filter((id) => id !== roomId));
-        message.success('Removed from favorites');
+        message.success('Удалено из избранного');
       } else {
         await favoritesAPI.add({ room_id: roomId });
         setFavorites([...favorites, roomId]);
-        message.success('Added to favorites');
+        message.success('Добавлено в избранное');
       }
     } catch (error) {
-      message.error('Failed to update favorites');
+      message.error('Не удалось обновить избранное');
     }
   };
 
@@ -118,11 +118,11 @@ const Rooms = () => {
         monthly_rent: selectedRoom.price_per_month,
         deposit: selectedRoom.price_per_month * 2,
       });
-      message.success('Lease created successfully!');
+      message.success('Аренда успешно оформлена!');
       setLeaseModalVisible(false);
       fetchRooms();
     } catch (error) {
-      message.error(error.response?.data?.detail || 'Failed to create lease');
+      message.error(error.response?.data?.detail || 'Не удалось оформить аренду');
     }
   };
 
@@ -133,10 +133,10 @@ const Rooms = () => {
         rating: values.rating,
         comment: values.comment,
       });
-      message.success('Review added successfully!');
+      message.success('Отзыв успешно добавлен!');
       setReviewModalVisible(false);
     } catch (error) {
-      message.error('Failed to add review');
+      message.error('Не удалось добавить отзыв');
     }
   };
 
@@ -155,7 +155,7 @@ const Rooms = () => {
         <Row gutter={16}>
           <Col span={6}>
             <Select
-              placeholder="Category"
+              placeholder="Категория"
               style={{ width: '100%' }}
               allowClear
               onChange={(value) => setFilters({ ...filters, category_id: value })}
@@ -169,19 +169,19 @@ const Rooms = () => {
           </Col>
           <Col span={6}>
             <Select
-              placeholder="Status"
+              placeholder="Статус"
               style={{ width: '100%' }}
               value={filters.status}
               onChange={(value) => setFilters({ ...filters, status: value })}
             >
-              <Select.Option value="available">Available</Select.Option>
-              <Select.Option value="occupied">Occupied</Select.Option>
-              <Select.Option value="maintenance">Maintenance</Select.Option>
+              <Select.Option value="available">Доступно</Select.Option>
+              <Select.Option value="occupied">Занято</Select.Option>
+              <Select.Option value="maintenance">Обслуживание</Select.Option>
             </Select>
           </Col>
           <Col span={12}>
             <div style={{ padding: '0 20px' }}>
-              <span>Price Range: </span>
+              <span>Диапазон цен: </span>
               <Slider
                 range
                 min={0}
@@ -198,9 +198,9 @@ const Rooms = () => {
       </Card>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 50 }}>Loading...</div>
+        <div style={{ textAlign: 'center', padding: 50 }}>Загрузка...</div>
       ) : rooms.length === 0 ? (
-        <Empty description="No rooms found" />
+        <Empty description="Помещения не найдены" />
       ) : (
         <Row gutter={[16, 16]}>
           {rooms.map((room) => (
@@ -225,7 +225,7 @@ const Rooms = () => {
                         justifyContent: 'center',
                       }}
                     >
-                      No Image
+                      Нет изображения
                     </div>
                   )
                 }
@@ -251,7 +251,7 @@ const Rooms = () => {
                             setLeaseModalVisible(true);
                           }}
                         >
-                          Rent
+                          Арендовать
                         </Button>,
                         <Button
                           onClick={() => {
@@ -259,7 +259,7 @@ const Rooms = () => {
                             setReviewModalVisible(true);
                           }}
                         >
-                          Review
+                          Отзыв
                         </Button>,
                       ]
                     : []
@@ -268,18 +268,20 @@ const Rooms = () => {
                 <Card.Meta
                   title={
                     <Space>
-                      Room {room.room_number}
-                      <Tag color={getStatusColor(room.status)}>{room.status}</Tag>
+                      Помещение {room.room_number}
+                      <Tag color={getStatusColor(room.status)}>
+                        {room.status === 'available' ? 'Доступно' : room.status === 'occupied' ? 'Занято' : 'Обслуживание'}
+                      </Tag>
                     </Space>
                   }
                   description={
                     <div>
                       <p>{room.description}</p>
                       <p>
-                        <DollarOutlined /> ${room.price_per_month}/month
+                        <DollarOutlined /> ${room.price_per_month}/мес
                       </p>
-                      <p>Area: {room.area} m²</p>
-                      <p>Floor: {room.floor}</p>
+                      <p>Площадь: {room.area} м²</p>
+                      <p>Этаж: {room.floor}</p>
                     </div>
                   }
                 />
@@ -291,7 +293,7 @@ const Rooms = () => {
 
       {/* Lease Modal */}
       <Modal
-        title="Create Lease"
+        title="Оформить аренду"
         open={leaseModalVisible}
         onCancel={() => setLeaseModalVisible(false)}
         footer={null}
@@ -299,18 +301,18 @@ const Rooms = () => {
         <Form onFinish={handleLeaseSubmit} layout="vertical">
           <Form.Item
             name="dates"
-            label="Lease Period"
-            rules={[{ required: true, message: 'Please select lease period' }]}
+            label="Период аренды"
+            rules={[{ required: true, message: 'Пожалуйста, выберите период аренды' }]}
           >
             <RangePicker style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item>
-            <p>Monthly Rent: ${selectedRoom?.price_per_month}</p>
-            <p>Deposit: ${selectedRoom?.price_per_month * 2}</p>
+            <p>Ежемесячная аренда: ${selectedRoom?.price_per_month}</p>
+            <p>Депозит: ${selectedRoom?.price_per_month * 2}</p>
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" block>
-              Confirm Lease
+              Подтвердить аренду
             </Button>
           </Form.Item>
         </Form>
@@ -318,7 +320,7 @@ const Rooms = () => {
 
       {/* Review Modal */}
       <Modal
-        title="Add Review"
+        title="Добавить отзыв"
         open={reviewModalVisible}
         onCancel={() => setReviewModalVisible(false)}
         footer={null}
@@ -326,17 +328,17 @@ const Rooms = () => {
         <Form onFinish={handleReviewSubmit} layout="vertical">
           <Form.Item
             name="rating"
-            label="Rating"
-            rules={[{ required: true, message: 'Please provide a rating' }]}
+            label="Рейтинг"
+            rules={[{ required: true, message: 'Пожалуйста, укажите рейтинг' }]}
           >
             <Rate />
           </Form.Item>
-          <Form.Item name="comment" label="Comment">
+          <Form.Item name="comment" label="Комментарий">
             <Input.TextArea rows={4} />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" block>
-              Submit Review
+              Отправить отзыв
             </Button>
           </Form.Item>
         </Form>

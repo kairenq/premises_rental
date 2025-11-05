@@ -13,10 +13,10 @@ const Register = () => {
     setLoading(true);
     try {
       await register(values);
-      message.success('Registration successful! Please login.');
+      message.success('Регистрация успешна! Теперь войдите в систему.');
       navigate('/login');
     } catch (error) {
-      message.error(error.response?.data?.detail || 'Registration failed');
+      message.error(error.response?.data?.detail || 'Ошибка регистрации');
     } finally {
       setLoading(false);
     }
@@ -31,15 +31,15 @@ const Register = () => {
         minHeight: '80vh',
       }}
     >
-      <Card title="Register" style={{ width: 400 }}>
+      <Card title="Регистрация" style={{ width: 400 }}>
         <Form name="register" onFinish={onFinish} layout="vertical">
           <Form.Item
             name="full_name"
-            rules={[{ required: true, message: 'Please input your full name!' }]}
+            rules={[{ required: true, message: 'Введите ваше полное имя!' }]}
           >
             <Input
               prefix={<UserOutlined />}
-              placeholder="Full Name"
+              placeholder="Полное имя"
               size="large"
             />
           </Form.Item>
@@ -47,8 +47,8 @@ const Register = () => {
           <Form.Item
             name="email"
             rules={[
-              { required: true, message: 'Please input your email!' },
-              { type: 'email', message: 'Please enter a valid email!' },
+              { required: true, message: 'Введите ваш email!' },
+              { type: 'email', message: 'Введите корректный email!' },
             ]}
           >
             <Input
@@ -61,7 +61,7 @@ const Register = () => {
           <Form.Item name="phone">
             <Input
               prefix={<PhoneOutlined />}
-              placeholder="Phone (optional)"
+              placeholder="Телефон (опционально)"
               size="large"
             />
           </Form.Item>
@@ -69,24 +69,24 @@ const Register = () => {
           <Form.Item
             name="role"
             initialValue="user"
-            rules={[{ required: true, message: 'Please select a role!' }]}
+            rules={[{ required: true, message: 'Выберите роль!' }]}
           >
-            <Select size="large" placeholder="Select role">
-              <Select.Option value="user">User</Select.Option>
-              <Select.Option value="landlord">Landlord</Select.Option>
+            <Select size="large" placeholder="Выберите роль">
+              <Select.Option value="user">Пользователь</Select.Option>
+              <Select.Option value="landlord">Арендодатель</Select.Option>
             </Select>
           </Form.Item>
 
           <Form.Item
             name="password"
             rules={[
-              { required: true, message: 'Please input your password!' },
-              { min: 6, message: 'Password must be at least 6 characters!' },
+              { required: true, message: 'Введите пароль!' },
+              { min: 6, message: 'Пароль должен быть минимум 6 символов!' },
             ]}
           >
             <Input.Password
               prefix={<LockOutlined />}
-              placeholder="Password"
+              placeholder="Пароль"
               size="large"
             />
           </Form.Item>
@@ -95,20 +95,20 @@ const Register = () => {
             name="confirm"
             dependencies={['password']}
             rules={[
-              { required: true, message: 'Please confirm your password!' },
+              { required: true, message: 'Подтвердите пароль!' },
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (!value || getFieldValue('password') === value) {
                     return Promise.resolve();
                   }
-                  return Promise.reject(new Error('Passwords do not match!'));
+                  return Promise.reject(new Error('Пароли не совпадают!'));
                 },
               }),
             ]}
           >
             <Input.Password
               prefix={<LockOutlined />}
-              placeholder="Confirm Password"
+              placeholder="Подтвердите пароль"
               size="large"
             />
           </Form.Item>
@@ -121,12 +121,12 @@ const Register = () => {
               block
               size="large"
             >
-              Register
+              Зарегистрироваться
             </Button>
           </Form.Item>
 
           <div style={{ textAlign: 'center' }}>
-            Already have an account? <Link to="/login">Login now!</Link>
+            Уже есть аккаунт? <Link to="/login">Войдите!</Link>
           </div>
         </Form>
       </Card>

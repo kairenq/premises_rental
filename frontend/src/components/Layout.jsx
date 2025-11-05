@@ -35,7 +35,7 @@ const Layout = ({ children }) => {
     {
       key: 'logout',
       icon: <LogoutOutlined />,
-      label: 'Logout',
+      label: 'Выйти',
       onClick: handleLogout,
     },
   ];
@@ -45,36 +45,36 @@ const Layout = ({ children }) => {
         {
           key: '/',
           icon: <HomeOutlined />,
-          label: <Link to="/">Home</Link>,
+          label: <Link to="/">Главная</Link>,
         },
         {
           key: '/rooms',
           icon: <ShopOutlined />,
-          label: <Link to="/rooms">Rooms</Link>,
+          label: <Link to="/rooms">Помещения</Link>,
         },
         ...(user.role === 'admin'
           ? [
               {
                 key: '/admin',
                 icon: <DashboardOutlined />,
-                label: <Link to="/admin">Admin Panel</Link>,
+                label: <Link to="/admin">Админ панель</Link>,
               },
             ]
           : [
               {
                 key: '/my-leases',
                 icon: <FileTextOutlined />,
-                label: <Link to="/my-leases">My Leases</Link>,
+                label: <Link to="/my-leases">Мои аренды</Link>,
               },
               {
                 key: '/favorites',
                 icon: <HeartOutlined />,
-                label: <Link to="/favorites">Favorites</Link>,
+                label: <Link to="/favorites">Избранное</Link>,
               },
               {
                 key: '/maintenance',
                 icon: <ToolOutlined />,
-                label: <Link to="/maintenance">Maintenance</Link>,
+                label: <Link to="/maintenance">Заявки</Link>,
               },
             ]),
       ]
@@ -82,12 +82,12 @@ const Layout = ({ children }) => {
         {
           key: '/',
           icon: <HomeOutlined />,
-          label: <Link to="/">Home</Link>,
+          label: <Link to="/">Главная</Link>,
         },
         {
           key: '/rooms',
           icon: <ShopOutlined />,
-          label: <Link to="/rooms">Rooms</Link>,
+          label: <Link to="/rooms">Помещения</Link>,
         },
       ];
 
@@ -102,7 +102,7 @@ const Layout = ({ children }) => {
         }}
       >
         <div style={{ color: 'white', fontSize: '20px', fontWeight: 'bold' }}>
-          Premises Rental
+          Аренда Помещений
         </div>
         <Menu
           theme="dark"
@@ -124,9 +124,9 @@ const Layout = ({ children }) => {
           ) : (
             <Space>
               <Button type="primary" onClick={() => navigate('/login')}>
-                <LoginOutlined /> Login
+                <LoginOutlined /> Войти
               </Button>
-              <Button onClick={() => navigate('/register')}>Register</Button>
+              <Button onClick={() => navigate('/register')}>Регистрация</Button>
             </Space>
           )}
         </div>
@@ -135,7 +135,7 @@ const Layout = ({ children }) => {
         {children}
       </Content>
       <Footer style={{ textAlign: 'center', background: '#001529', color: 'white' }}>
-        Premises Rental System © 2025
+        Система аренды помещений © 2025
       </Footer>
     </AntLayout>
   );
