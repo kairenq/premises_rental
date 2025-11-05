@@ -1,0 +1,122 @@
+@startuml
+!define RECTANGLE
+skinparam backgroundColor #FFFFFF
+skinparam handwritten false
+skinparam monochrome false
+skinparam shadowing false
+
+' Определение стиля
+skinparam actor {
+    BackgroundColor #4A90E2
+    BorderColor #2E5C8A
+}
+
+skinparam usecase {
+    BackgroundColor #F5F5F5
+    BorderColor #333333
+    BorderThickness 2
+}
+
+skinparam packageStyle rectangle
+
+title Система аренды помещений\n(Premises Rental System)
+
+' Акторы
+:Пользователь: as User
+:Администратор: as Admin
+
+' Границы системы
+package "Система аренды помещений" {
+
+    ' Модуль аутентификации
+    package "Аутентификация" #LightBlue {
+        usecase "Регистрация" as UC1
+        usecase "Вход в систему" as UC2
+        usecase "Выход из системы" as UC3
+    }
+
+    ' Модуль управления помещениями
+    package "Управление помещениями" #LightGreen {
+        usecase "Просмотр помещений" as UC4
+        usecase "Поиск помещений" as UC5
+        usecase "Добавить помещение" as UC6
+        usecase "Редактировать помещение" as UC7
+        usecase "Удалить помещение" as UC8
+    }
+
+    ' Модуль аренды
+    package "Управление арендой" #LightYellow {
+        usecase "Создать заявку на аренду" as UC9
+        usecase "Просмотреть свои заявки" as UC10
+        usecase "Отменить заявку" as UC11
+        usecase "Управление всеми заявками" as UC12
+        usecase "Подтвердить аренду" as UC13
+        usecase "Отклонить аренду" as UC14
+    }
+
+    ' Модуль администрирования
+    package "Администрирование" #LightPink {
+        usecase "Управление пользователями" as UC15
+        usecase "Просмотр статистики" as UC16
+        usecase "Создать пользователя" as UC17
+        usecase "Редактировать пользователя" as UC18
+        usecase "Удалить пользователя" as UC19
+        usecase "Просмотр отчетов" as UC20
+    }
+}
+
+' Связи пользователя
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC9
+User --> UC10
+User --> UC11
+
+' Связи администратора
+Admin --> UC2
+Admin --> UC3
+Admin --> UC4
+Admin --> UC5
+Admin --> UC6
+Admin --> UC7
+Admin --> UC8
+Admin --> UC12
+Admin --> UC13
+Admin --> UC14
+Admin --> UC15
+Admin --> UC16
+Admin --> UC17
+Admin --> UC18
+Admin --> UC19
+Admin --> UC20
+
+' Отношения include
+UC12 ..> UC13 : <<include>>
+UC12 ..> UC14 : <<include>>
+UC15 ..> UC17 : <<include>>
+UC15 ..> UC18 : <<include>>
+UC15 ..> UC19 : <<include>>
+
+' Отношения extend
+UC5 ..> UC4 : <<extend>>
+UC16 ..> UC20 : <<extend>>
+
+' Наследование (Admin является специализацией User)
+Admin -|> User
+
+note right of Admin
+  Администратор имеет все права
+  пользователя плюс дополнительные
+  административные функции
+end note
+
+note left of User
+  Обычный пользователь может
+  просматривать помещения и
+  создавать заявки на аренду
+end note
+
+@enduml
