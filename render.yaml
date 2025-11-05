@@ -2,19 +2,23 @@ services:
   - type: web
     name: premises-rental-api
     env: python
+    runtime: python
     region: oregon
     plan: free
     branch: main
-    buildCommand: "cd backend && pip install -r requirements.txt"
-    startCommand: "cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    rootDir: backend
+    buildCommand: "pip install --upgrade pip && pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.0
+        value: 3.11.9
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
         value: sqlite:///./premises_rental.db
+      - key: ENVIRONMENT
+        value: production
     disk:
       name: data
-      mountPath: /opt/render/project/src/backend
+      mountPath: /opt/render/project/src
       sizeGB: 1

@@ -43,11 +43,13 @@
    Runtime: Python 3
 
    Build Command:
-   pip install -r requirements.txt
+   pip install --upgrade pip && pip install -r requirements.txt
 
    Start Command:
    uvicorn app.main:app --host 0.0.0.0 --port $PORT
    ```
+
+   ⚠️ **ВАЖНО:** Render автоматически определит Python 3.11.9 из файла `runtime.txt`
 
 5. **Выберите план:**
    - **Free** (достаточно для тестирования)

@@ -16,9 +16,9 @@ Dashboard → New + → Web Service
 ```
 Name: premises-rental-api
 Root Directory: backend
-Runtime: Python 3
+Runtime: Python 3 (auto-detects 3.11.9 from runtime.txt)
 
-Build: pip install -r requirements.txt
+Build: pip install --upgrade pip && pip install -r requirements.txt
 Start: uvicorn app.main:app --host 0.0.0.0 --port $PORT
 
 Plan: Free
