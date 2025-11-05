@@ -1,0 +1,239 @@
+@startuml
+!define RECTANGLE
+skinparam backgroundColor #FFFFFF
+skinparam handwritten false
+skinparam monochrome false
+skinparam shadowing false
+
+' Определение стиля
+skinparam actor {
+    BackgroundColor #4A90E2
+    BorderColor #2E5C8A
+    FontSize 12
+}
+
+skinparam usecase {
+    BackgroundColor #F5F5F5
+    BorderColor #333333
+    BorderThickness 2
+    FontSize 11
+}
+
+skinparam packageStyle rectangle
+
+title Система управления арендой помещений\n(Property Rental Management System)
+
+' Акторы
+:Гость: as Guest
+:Арендатор: as Tenant
+:Управляющий: as Manager
+:Администратор: as Admin
+
+' Границы системы
+package "Система управления арендой помещений" {
+
+    ' ==================== АУТЕНТИФИКАЦИЯ ====================
+    package "Аутентификация и профиль" #LightBlue {
+        usecase "Регистрация" as UC1
+        usecase "Вход в систему" as UC2
+        usecase "Выход из системы" as UC3
+        usecase "Редактировать профиль" as UC4
+        usecase "Просмотр уведомлений" as UC5
+    }
+
+    ' ==================== ПОИСК И ПРОСМОТР ====================
+    package "Поиск и просмотр помещений" #LightGreen {
+        usecase "Просмотр каталога помещений" as UC6
+        usecase "Поиск помещений" as UC7
+        usecase "Фильтрация по категориям" as UC8
+        usecase "Просмотр деталей помещения" as UC9
+        usecase "Просмотр фотографий" as UC10
+        usecase "Просмотр отзывов" as UC11
+        usecase "Добавить в избранное" as UC12
+        usecase "Просмотр избранного" as UC13
+    }
+
+    ' ==================== АРЕНДА ====================
+    package "Управление арендой" #LightYellow {
+        usecase "Создать заявку на аренду" as UC14
+        usecase "Просмотр своих аренд" as UC15
+        usecase "Продлить аренду" as UC16
+        usecase "Завершить аренду" as UC17
+        usecase "Просмотр истории аренды" as UC18
+        usecase "Оставить отзыв" as UC19
+    }
+
+    ' ==================== ПЛАТЕЖИ ====================
+    package "Управление платежами" #LightCyan {
+        usecase "Просмотр платежей" as UC20
+        usecase "Оплатить аренду" as UC21
+        usecase "Внести депозит" as UC22
+        usecase "Просмотр истории платежей" as UC23
+    }
+
+    ' ==================== ЗАЯВКИ НА ОБСЛУЖИВАНИЕ ====================
+    package "Обслуживание помещений" #Wheat {
+        usecase "Создать заявку на ремонт" as UC24
+        usecase "Просмотр своих заявок" as UC25
+        usecase "Отслеживать статус заявки" as UC26
+        usecase "Обработать заявку" as UC27
+        usecase "Закрыть заявку" as UC28
+    }
+
+    ' ==================== УПРАВЛЕНИЕ ПОМЕЩЕНИЯМИ ====================
+    package "Управление помещениями" #LightPink {
+        usecase "Добавить помещение" as UC29
+        usecase "Редактировать помещение" as UC30
+        usecase "Удалить помещение" as UC31
+        usecase "Управление фотографиями" as UC32
+        usecase "Изменить статус помещения" as UC33
+        usecase "Управление категориями" as UC34
+    }
+
+    ' ==================== УПРАВЛЕНИЕ ЗДАНИЯМИ И КОМПАНИЯМИ ====================
+    package "Управление зданиями" #Lavender {
+        usecase "Добавить здание" as UC35
+        usecase "Редактировать здание" as UC36
+        usecase "Удалить здание" as UC37
+        usecase "Управление компаниями" as UC38
+        usecase "Добавить компанию" as UC39
+        usecase "Редактировать компанию" as UC40
+    }
+
+    ' ==================== АНАЛИТИКА И ОТЧЕТЫ ====================
+    package "Аналитика и отчеты" #LightSalmon {
+        usecase "Просмотр статистики аренд" as UC41
+        usecase "Просмотр финансовых отчетов" as UC42
+        usecase "Просмотр популярных помещений" as UC43
+        usecase "Экспорт отчетов" as UC44
+        usecase "Просмотр логов активности" as UC45
+    }
+
+    ' ==================== АДМИНИСТРИРОВАНИЕ ====================
+    package "Администрирование системы" #MistyRose {
+        usecase "Управление пользователями" as UC46
+        usecase "Назначение ролей" as UC47
+        usecase "Блокировка пользователей" as UC48
+        usecase "Просмотр всех аренд" as UC49
+        usecase "Модерация отзывов" as UC50
+    }
+}
+
+' ==================== СВЯЗИ ГОСТЯ ====================
+Guest --> UC1
+Guest --> UC2
+Guest --> UC6
+Guest --> UC7
+Guest --> UC8
+Guest --> UC9
+Guest --> UC10
+Guest --> UC11
+
+' ==================== СВЯЗИ АРЕНДАТОРА ====================
+Tenant --> UC2
+Tenant --> UC3
+Tenant --> UC4
+Tenant --> UC5
+Tenant --> UC6
+Tenant --> UC7
+Tenant --> UC8
+Tenant --> UC9
+Tenant --> UC10
+Tenant --> UC11
+Tenant --> UC12
+Tenant --> UC13
+Tenant --> UC14
+Tenant --> UC15
+Tenant --> UC16
+Tenant --> UC17
+Tenant --> UC18
+Tenant --> UC19
+Tenant --> UC20
+Tenant --> UC21
+Tenant --> UC22
+Tenant --> UC23
+Tenant --> UC24
+Tenant --> UC25
+Tenant --> UC26
+
+' ==================== СВЯЗИ УПРАВЛЯЮЩЕГО ====================
+Manager --> UC2
+Manager --> UC3
+Manager --> UC4
+Manager --> UC5
+Manager --> UC6
+Manager --> UC27
+Manager --> UC28
+Manager --> UC29
+Manager --> UC30
+Manager --> UC31
+Manager --> UC32
+Manager --> UC33
+Manager --> UC34
+Manager --> UC35
+Manager --> UC36
+Manager --> UC37
+Manager --> UC38
+Manager --> UC39
+Manager --> UC40
+Manager --> UC41
+Manager --> UC42
+Manager --> UC43
+Manager --> UC44
+Manager --> UC49
+
+' ==================== СВЯЗИ АДМИНИСТРАТОРА ====================
+Admin --> UC45
+Admin --> UC46
+Admin --> UC47
+Admin --> UC48
+Admin --> UC50
+
+' ==================== ОТНОШЕНИЯ INCLUDE ====================
+UC7 ..> UC8 : <<include>>
+UC9 ..> UC10 : <<include>>
+UC9 ..> UC11 : <<include>>
+UC14 ..> UC22 : <<include>>
+UC15 ..> UC18 : <<extend>>
+UC20 ..> UC23 : <<extend>>
+UC25 ..> UC26 : <<include>>
+UC27 ..> UC28 : <<extend>>
+UC29 ..> UC32 : <<include>>
+UC30 ..> UC32 : <<extend>>
+UC38 ..> UC39 : <<include>>
+UC38 ..> UC40 : <<include>>
+UC41 ..> UC44 : <<extend>>
+UC42 ..> UC44 : <<extend>>
+
+' ==================== ОТНОШЕНИЯ НАСЛЕДОВАНИЯ ====================
+Tenant --|> Guest
+Manager --|> Tenant
+Admin --|> Manager
+
+' ==================== ПРИМЕЧАНИЯ ====================
+note right of Admin
+  Администратор имеет полные права
+  на управление системой, включая
+  управление пользователями и
+  просмотр системных логов
+end note
+
+note left of Guest
+  Гость может просматривать помещения
+  без регистрации, но для создания
+  заявок необходимо зарегистрироваться
+end note
+
+note bottom of Manager
+  Управляющий отвечает за помещения,
+  здания и обработку заявок на
+  обслуживание
+end note
+
+note bottom of Tenant
+  Арендатор может искать помещения,
+  создавать заявки на аренду,
+  оплачивать и оставлять отзывы
+end note
+
+@enduml
