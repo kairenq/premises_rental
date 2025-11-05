@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, Table, Button, Modal, Form, Input, Select, message, Space, Tag, Popconfirm, Card, Row, Col, Statistic, InputNumber } from 'antd';
 import { UserOutlined, HomeOutlined, ShopOutlined, BankOutlined, TagOutlined, PlusOutlined, EditOutlined, DeleteOutlined, BarChartOutlined } from '@ant-design/icons';
-import { roomsAPI, companiesAPI, categoriesAPI, statsAPI, buildingsAPI } from '../services/api';
+import { roomsAPI, companiesAPI, categoriesAPI, statsAPI } from '../services/api';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -12,9 +12,6 @@ const AdminPanel = () => {
 
   // Stats
   const [stats, setStats] = useState({});
-
-  // Buildings (for dropdowns only)
-  const [buildings, setBuildings] = useState([]);
 
   // Rooms
   const [rooms, setRooms] = useState([]);
@@ -61,10 +58,7 @@ const AdminPanel = () => {
       const response = await roomsAPI.getAll({});
       setRooms(response.data);
 
-      // Fetch buildings and categories for dropdowns
-      const buildingsRes = await buildingsAPI.getAll({});
-      setBuildings(buildingsRes.data);
-
+      // Fetch categories for dropdowns
       const categoriesRes = await categoriesAPI.getAll();
       setCategories(categoriesRes.data);
     } catch (error) {
@@ -111,7 +105,6 @@ const AdminPanel = () => {
   const roomColumns = [
     { title: 'ID', dataIndex: 'room_id', key: 'room_id', width: 70 },
     { title: '№', dataIndex: 'room_number', key: 'room_number', width: 80 },
-    { title: 'Здание', dataIndex: ['building', 'name'], key: 'building' },
     { title: 'Категория', dataIndex: ['category', 'name'], key: 'category' },
     { title: 'Площадь', dataIndex: 'area', key: 'area', width: 100, render: (area) => `${area} м²` },
     { title: 'Цена/мес', dataIndex: 'price_per_month', key: 'price', width: 120, render: (price) => `${price} ₽` },
@@ -415,11 +408,6 @@ const AdminPanel = () => {
         <Form form={roomForm} onFinish={handleRoomSubmit} layout="vertical">
           <Form.Item name="room_number" label="Номер помещения" rules={[{ required: true, message: 'Введите номер' }]}>
             <Input />
-          </Form.Item>
-          <Form.Item name="building_id" label="Здание" rules={[{ required: true, message: 'Выберите здание' }]}>
-            <Select>
-              {buildings.map(b => <Option key={b.building_id} value={b.building_id}>{b.name}</Option>)}
-            </Select>
           </Form.Item>
           <Form.Item name="category_id" label="Категория" rules={[{ required: true, message: 'Выберите категорию' }]}>
             <Select>
