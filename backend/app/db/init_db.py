@@ -11,7 +11,7 @@ def init_database(db: Session):
     # Check if data already exists
     existing_categories = db.query(RoomCategory).count()
     existing_companies = db.query(Company).count()
-    existing_users = db.query(User).filter(User.email.in_(['landlord@test.com', 'user@test.com'])).count()
+    existing_users = db.query(User).filter(User.email.in_(['admin@test.com', 'landlord@test.com', 'user@test.com'])).count()
 
     # Create categories if not exist
     if existing_categories == 0:
@@ -66,8 +66,23 @@ def init_database(db: Session):
         print(f"✅ Companies already exist ({existing_companies})")
 
     # Create test users if not exist
-    if existing_users < 2:
+    if existing_users < 3:
         print("👥 Creating test users...")
+
+        # Check and create admin
+        admin = db.query(User).filter(User.email == "admin@test.com").first()
+        if not admin:
+            admin = User(
+                full_name="Администратор Системы",
+                email="admin@test.com",
+                phone="+7 (900) 000-00-00",
+                role="admin",
+                password_hash=get_password_hash("admin123")
+            )
+            db.add(admin)
+            print("✅ Created admin user: admin@test.com / admin123")
+        else:
+            print("✅ Admin user already exists")
 
         # Check and create landlord
         landlord = db.query(User).filter(User.email == "landlord@test.com").first()
@@ -106,6 +121,7 @@ def init_database(db: Session):
         db.commit()
         print("🎉 Database initialization completed successfully!")
         print("\n📋 Test credentials:")
+        print("   Admin:    admin@test.com / admin123")
         print("   Landlord: landlord@test.com / landlord123")
         print("   User:     user@test.com / user123")
     except Exception as e:
