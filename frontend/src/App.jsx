@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Rooms from './pages/Rooms';
 import AdminPanel from './pages/AdminPanel';
+import LandlordPanel from './pages/LandlordPanel';
 import MyLeases from './pages/MyLeases';
 import Favorites from './pages/Favorites';
 import Maintenance from './pages/Maintenance';
@@ -73,6 +74,16 @@ const AppRoutes = () => {
           <ProtectedRoute adminOnly>
             <Layout>
               <AdminPanel />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/landlord"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <LandlordPanel />
             </Layout>
           </ProtectedRoute>
         }

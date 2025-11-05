@@ -60,6 +60,14 @@ const Layout = ({ children }) => {
                 label: <Link to="/admin">Админ панель</Link>,
               },
             ]
+          : user.role === 'landlord'
+          ? [
+              {
+                key: '/landlord',
+                icon: <DashboardOutlined />,
+                label: <Link to="/landlord">Панель арендодателя</Link>,
+              },
+            ]
           : [
               {
                 key: '/my-leases',
