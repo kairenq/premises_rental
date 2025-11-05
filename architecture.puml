@@ -1,0 +1,622 @@
+@startuml Premises Rental System Architecture
+
+!define RECTANGLE class
+
+title Архитектура системы аренды помещений (Premises Rental System)
+
+package "Frontend (React + Vite)" {
+    package "Pages" {
+        [LoginPage] as login
+        [RegisterPage] as register
+        [DashboardPage] as dashboard
+        [AdminPage] as admin
+    }
+
+    package "Components" {
+        [Layout] as layout
+        [Navbar] as navbar
+        [Sidebar] as sidebar
+        [Auth Components] as authComp
+        [Admin Components] as adminComp
+    }
+
+    package "Services" {
+        [API Service] as apiService
+        [Auth API] as authAPI
+        [Admin API] as adminAPI
+    }
+
+    package "Context" {
+        [AuthContext] as authContext
+    }
+
+    package "UI Libraries" {
+        [Material-UI] as mui
+        [Framer Motion] as motion
+        [Recharts] as charts
+        [React Toastify] as toast
+    }
+}
+
+package "Backend (FastAPI)" {
+    package "Main Application" {
+        [FastAPI App] as app
+        [CORS Middleware] as cors
+    }
+
+    package "Routes" {
+        [Auth Router] as authRouter
+        [Admin Router] as adminRouter
+        [Feature Router] as featureRouter
+    }
+
+    package "Models (Pydantic)" {
+        [UserRegister] as userRegModel
+        [UserLogin] as userLoginModel
+        [UserResponse] as userRespModel
+        [UserUpdate] as userUpdateModel
+    }
+
+    package "Database Layer" {
+        [Database Class] as dbClass
+        [SQLite Connection] as sqlite
+    }
+}
+
+package "Database (SQLite)" {
+    [users table] as usersTable
+    [sessions table] as sessionsTable
+    [feature tables] as featureTables
+}
+
+' Frontend connections
+login --> authContext
+register --> authContext
+dashboard --> authContext
+admin --> authContext
+
+authContext --> authAPI
+authContext --> toast
+
+login --> layout
+register --> layout
+dashboard --> layout
+admin --> layout
+
+layout --> navbar
+layout --> sidebar
+
+navbar --> mui
+sidebar --> mui
+authComp --> mui
+adminComp --> mui
+
+dashboard --> charts
+dashboard --> motion
+
+authAPI --> apiService
+adminAPI --> apiService
+
+' Backend connections
+app --> cors
+app --> authRouter
+app --> adminRouter
+app --> featureRouter
+
+authRouter --> userRegModel
+authRouter --> userLoginModel
+authRouter --> userRespModel
+
+adminRouter --> userRespModel
+adminRouter --> userUpdateModel
+
+authRouter --> dbClass
+adminRouter --> dbClass
+featureRouter --> dbClass
+
+dbClass --> sqlite
+
+' Database connections
+sqlite --> usersTable
+sqlite --> sessionsTable
+sqlite --> featureTables
+
+' API connections
+apiService -[#blue]-> app : "HTTP/REST API\n(localhost:8000)"
+
+note right of apiService
+  Axios с credentials
+  Base URL: http://localhost:8000/api
+end note
+
+note left of app
+  FastAPI с CORS
+  Поддержка cookies
+  Документация: /docs
+end note
+
+note bottom of sqlite
+  database.db
+  Автоматическая инициализация
+  Дефолтный admin: admin/admin123
+end note
+
+@enduml
+
+' ============================================
+' Диаграмма классов для моделей данных
+' ============================================
+
+@startuml Data Models
+
+title Модели данных системы
+
+class User {
+    +id: Integer
+    +username: String
+    +email: String
+    +password: String
+    +role: String [user|admin]
+    +created_at: Timestamp
+    +is_active: Boolean
+    --
+    Ограничения:
+    - username UNIQUE
+    - email UNIQUE
+    - роль только user или admin
+}
+
+class Session {
+    +id: Integer
+    +user_id: Integer
+    +created_at: Timestamp
+    --
+    FOREIGN KEY: user_id -> User.id
+    ON DELETE CASCADE
+}
+
+class UserRegister {
+    +username: String (3-50 chars)
+    +email: EmailStr
+    +password: String (min 6 chars)
+}
+
+class UserLogin {
+    +username: String
+    +password: String
+}
+
+class UserResponse {
+    +id: Integer
+    +username: String
+    +email: String
+    +role: String
+    +created_at: String
+    +is_active: Boolean
+}
+
+class UserUpdate {
+    +username: Optional[String]
+    +email: Optional[EmailStr]
+    +role: Optional[Literal['user','admin']]
+    +is_active: Optional[Boolean]
+}
+
+User "1" -- "*" Session : создаёт
+UserRegister ..> User : создание
+UserLogin ..> User : аутентификация
+User ..> UserResponse : представление
+UserUpdate ..> User : обновление
+
+note right of User
+  Основная таблица пользователей
+  Пароли в plain text
+  Дефолтный admin:
+    - username: admin
+    - password: admin123
+end note
+
+note right of Session
+  Таблица сессий
+  Используется для
+  аутентификации через cookies
+end note
+
+@enduml
+
+' ============================================
+' Диаграмма последовательности - Аутентификация
+' ============================================
+
+@startuml Authentication Flow
+
+title Процесс аутентификации пользователя
+
+actor User as user
+participant "LoginPage" as login
+participant "AuthContext" as context
+participant "authAPI" as api
+participant "FastAPI\nauth/login" as backend
+participant "Database" as db
+participant "Response\n(Cookie)" as cookie
+
+user -> login : Вводит credentials
+activate login
+
+login -> context : login(username, password)
+activate context
+
+context -> api : authAPI.login(credentials)
+activate api
+
+api -> backend : POST /api/auth/login
+activate backend
+
+backend -> db : SELECT * FROM users\nWHERE username=? AND password=?
+activate db
+db --> backend : user data
+deactivate db
+
+alt Пользователь найден
+    backend -> db : INSERT INTO sessions\n(user_id) VALUES (?)
+    activate db
+    db --> backend : session_id
+    deactivate db
+
+    backend -> cookie : set_cookie('session_id')
+    activate cookie
+    cookie --> backend
+    deactivate cookie
+
+    backend --> api : {user data}
+    deactivate backend
+
+    api --> context : response.data
+    deactivate api
+
+    context -> context : setUser(userData)
+    context --> login : success (true)
+    deactivate context
+
+    login -> login : toast.success('Успешный вход!')
+    login -> user : Redirect to Dashboard
+
+else Неверные данные
+    backend --> api : 401 Unauthorized
+    api --> context : error
+    context --> login : failure (false)
+    login -> login : toast.error('Ошибка входа')
+    login --> user : Показать ошибку
+end
+
+deactivate login
+
+@enduml
+
+' ============================================
+' Диаграмма последовательности - Админ операции
+' ============================================
+
+@startuml Admin Operations
+
+title Управление пользователями (Админ-панель)
+
+actor Admin as admin
+participant "AdminPage" as page
+participant "adminAPI" as api
+participant "FastAPI\nadmin router" as backend
+participant "Database" as db
+
+== Получение списка пользователей ==
+
+admin -> page : Открывает админ-панель
+activate page
+
+page -> api : adminAPI.getAllUsers()
+activate api
+
+api -> backend : GET /api/admin/users
+activate backend
+
+backend -> backend : require_admin()\nПроверка прав
+
+backend -> db : SELECT * FROM users\nORDER BY created_at DESC
+activate db
+db --> backend : список пользователей
+deactivate db
+
+backend --> api : [{user1}, {user2}, ...]
+deactivate backend
+
+api --> page : users data
+deactivate api
+
+page -> page : Отображение таблицы
+page --> admin : Показать пользователей
+
+== Обновление пользователя ==
+
+admin -> page : Изменяет данные пользователя
+page -> api : adminAPI.updateUser(userId, updates)
+activate api
+
+api -> backend : PUT /api/admin/users/{id}
+activate backend
+
+backend -> backend : require_admin()
+
+backend -> db : UPDATE users SET ...\nWHERE id = ?
+activate db
+db --> backend : updated user
+deactivate db
+
+backend --> api : {updated user data}
+deactivate backend
+
+api --> page : success
+deactivate api
+
+page -> page : toast.success('Обновлено')
+page --> admin : Обновленные данные
+
+== Получение статистики ==
+
+admin -> page : Просмотр статистики
+page -> api : adminAPI.getStats()
+activate api
+
+api -> backend : GET /api/admin/stats
+activate backend
+
+backend -> db : COUNT queries
+activate db
+note right
+  - Всего пользователей
+  - Активных пользователей
+  - Кол-во админов
+  - Регистрации за 7 дней
+end note
+db --> backend : статистика
+deactivate db
+
+backend --> api : stats object
+deactivate backend
+
+api --> page : stats
+deactivate api
+
+page -> page : Отображение графиков (Recharts)
+page --> admin : Визуализация данных
+
+deactivate page
+
+@enduml
+
+' ============================================
+' Диаграмма компонентов
+' ============================================
+
+@startuml Component Diagram
+
+title Компонентная диаграмма системы
+
+package "Client Browser" {
+    [Web Browser] as browser
+}
+
+package "Frontend Server\n(Vite Dev Server :5173)" {
+    component "React Application" {
+        [Router] as router
+        [Pages] as pages
+        [Components] as components
+        [AuthContext] as authCtx
+        [API Services] as apiSvc
+    }
+}
+
+package "Backend Server\n(Uvicorn :8000)" {
+    component "FastAPI Application" {
+        [CORS Middleware] as corsMiddleware
+        [Auth Routes] as authRoutes
+        [Admin Routes] as adminRoutes
+        [Feature Routes] as featureRoutes
+        [Pydantic Models] as models
+        [Database Manager] as dbMgr
+    }
+}
+
+database "SQLite Database\n(database.db)" {
+    [users] as usersDB
+    [sessions] as sessionsDB
+    [other tables] as otherDB
+}
+
+browser --> router : HTTP Request
+router --> pages
+pages --> components
+pages --> authCtx
+components --> authCtx
+authCtx --> apiSvc
+apiSvc --> corsMiddleware : REST API\n(Axios + Cookies)
+
+corsMiddleware --> authRoutes
+corsMiddleware --> adminRoutes
+corsMiddleware --> featureRoutes
+
+authRoutes --> models
+adminRoutes --> models
+featureRoutes --> models
+
+authRoutes --> dbMgr
+adminRoutes --> dbMgr
+featureRoutes --> dbMgr
+
+dbMgr --> usersDB
+dbMgr --> sessionsDB
+dbMgr --> otherDB
+
+note right of apiSvc
+  withCredentials: true
+  Автоматическая отправка cookies
+end note
+
+note left of corsMiddleware
+  allow_credentials: True
+  allow_origins: ["http://localhost:5173"]
+end note
+
+note bottom of dbMgr
+  SQLite row_factory
+  Автоматическая инициализация
+  Connection pooling
+end note
+
+@enduml
+
+' ============================================
+' Диаграмма развертывания
+' ============================================
+
+@startuml Deployment Diagram
+
+title Диаграмма развертывания
+
+node "Development Machine" {
+
+    artifact "Backend Files" {
+        [main.py]
+        [database.py]
+        [models.py]
+        [routes/]
+        [requirements.txt]
+        [start_backend.bat/sh]
+    }
+
+    artifact "Frontend Files" {
+        [src/]
+        [package.json]
+        [vite.config.js]
+        [start_frontend.bat/sh]
+    }
+
+    node "Backend Process\n:8000" {
+        component "Uvicorn Server" {
+            [FastAPI App]
+        }
+    }
+
+    node "Frontend Process\n:5173" {
+        component "Vite Dev Server" {
+            [React App]
+        }
+    }
+
+    database "SQLite\ndatabase.db" {
+        [Tables]
+    }
+}
+
+[Backend Files] ..> [FastAPI App] : Python Runtime
+[Frontend Files] ..> [React App] : Node.js Runtime
+
+[FastAPI App] --> [Tables] : SQLite3
+[React App] ..> [FastAPI App] : HTTP REST API
+
+note right of [FastAPI App]
+  Запуск:
+  python main.py
+  или
+  start_backend.bat/sh
+end note
+
+note right of [React App]
+  Запуск:
+  npm run dev
+  или
+  start_frontend.bat/sh
+end note
+
+@enduml
+
+' ============================================
+' Диаграмма вариантов использования
+' ============================================
+
+@startuml Use Cases
+
+title Диаграмма вариантов использования
+
+left to right direction
+
+actor "Пользователь" as User
+actor "Администратор" as Admin
+
+rectangle "Premises Rental System" {
+
+    package "Аутентификация" {
+        usecase "Регистрация" as UC1
+        usecase "Вход в систему" as UC2
+        usecase "Выход из системы" as UC3
+        usecase "Просмотр профиля" as UC4
+    }
+
+    package "Пользовательский функционал" {
+        usecase "Просмотр дашборда" as UC5
+        usecase "Управление своими данными" as UC6
+        usecase "Просмотр статистики" as UC7
+    }
+
+    package "Административный функционал" {
+        usecase "Просмотр всех пользователей" as UC8
+        usecase "Редактирование пользователя" as UC9
+        usecase "Удаление пользователя" as UC10
+        usecase "Просмотр системной статистики" as UC11
+        usecase "Изменение ролей" as UC12
+        usecase "Деактивация пользователей" as UC13
+    }
+}
+
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+User --> UC7
+
+Admin --> UC8
+Admin --> UC9
+Admin --> UC10
+Admin --> UC11
+Admin --> UC12
+Admin --> UC13
+
+Admin --|> User : extends
+
+UC9 ..> UC8 : <<include>>
+UC10 ..> UC8 : <<include>>
+UC12 ..> UC9 : <<extend>>
+UC13 ..> UC9 : <<extend>>
+
+note right of Admin
+  Администратор имеет
+  все права пользователя
+  плюс административные
+  функции
+end note
+
+note bottom of UC1
+  Требования:
+  - username (3-50 символов)
+  - email (валидный)
+  - password (min 6 символов)
+end note
+
+note bottom of UC2
+  Аутентификация:
+  - Plain text пароли
+  - Session через cookies
+  - Без JWT токенов
+end note
+
+@enduml

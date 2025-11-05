@@ -1,0 +1,660 @@
+# ============================================
+# Архитектура системы аренды помещений
+# Premises Rental System Architecture
+# ============================================
+
+system_name: "Premises Rental System"
+description: "Веб-приложение для управления арендой помещений на базе FastAPI и React"
+version: "1.0.0"
+architecture_type: "Client-Server (REST API)"
+
+# ============================================
+# Технологический стек
+# ============================================
+
+technology_stack:
+  backend:
+    framework: "FastAPI 0.104.1+"
+    server: "Uvicorn"
+    database: "SQLite (встроенный)"
+    validation: "Pydantic 2.5.0"
+    authentication: "Cookie-based sessions (без JWT)"
+    password_storage: "Plain text (для разработки)"
+
+  frontend:
+    framework: "React 18.2+"
+    build_tool: "Vite 5.0+"
+    router: "React Router DOM 6.20+"
+    http_client: "Axios 1.6+"
+    ui_library: "Material-UI (@mui/material)"
+    animations: "Framer Motion 10.16+"
+    charts: "Recharts 2.10+"
+    notifications: "React Toastify 9.1+"
+
+# ============================================
+# Архитектурные компоненты
+# ============================================
+
+components:
+
+  # Frontend компоненты
+  frontend:
+    base_url: "http://localhost:5173"
+    type: "Single Page Application (SPA)"
+
+    layers:
+      presentation:
+        description: "Слой представления (UI компоненты)"
+        components:
+          - name: "Pages"
+            items:
+              - LoginPage: "Страница входа"
+              - RegisterPage: "Страница регистрации"
+              - DashboardPage: "Главная панель пользователя"
+              - AdminPage: "Панель администратора"
+
+          - name: "Components"
+            items:
+              - Layout: "Основной layout с навигацией"
+              - Navbar: "Навигационная панель"
+              - Sidebar: "Боковое меню"
+              - AuthComponents: "Компоненты аутентификации"
+              - AdminComponents: "Компоненты админ-панели"
+
+      business_logic:
+        description: "Бизнес-логика и управление состоянием"
+        components:
+          - name: "Context"
+            items:
+              - AuthContext:
+                  description: "Контекст аутентификации"
+                  state:
+                    - user: "Данные текущего пользователя"
+                    - loading: "Статус загрузки"
+                  methods:
+                    - login: "Вход в систему"
+                    - register: "Регистрация"
+                    - logout: "Выход"
+                    - checkAuth: "Проверка аутентификации"
+                    - isAdmin: "Проверка прав администратора"
+
+      data_access:
+        description: "Слой доступа к данным"
+        components:
+          - name: "Services"
+            items:
+              - api.js:
+                  description: "Axios клиент"
+                  base_url: "http://localhost:8000/api"
+                  with_credentials: true
+
+              - authAPI:
+                  endpoints:
+                    - POST /auth/register: "Регистрация"
+                    - POST /auth/login: "Вход"
+                    - POST /auth/logout: "Выход"
+                    - GET /auth/me: "Получить текущего пользователя"
+
+              - adminAPI:
+                  endpoints:
+                    - GET /admin/users: "Список всех пользователей"
+                    - PUT /admin/users/{id}: "Обновление пользователя"
+                    - DELETE /admin/users/{id}: "Удаление пользователя"
+                    - GET /admin/stats: "Статистика системы"
+
+  # Backend компоненты
+  backend:
+    base_url: "http://localhost:8000"
+    type: "REST API Server"
+
+    layers:
+      api_layer:
+        description: "API endpoints и маршрутизация"
+        components:
+          - name: "main.py"
+            description: "Главное приложение FastAPI"
+            responsibilities:
+              - "Инициализация приложения"
+              - "Настройка CORS"
+              - "Регистрация роутеров"
+              - "Запуск сервера"
+
+          - name: "Routers"
+            items:
+              - auth.py:
+                  prefix: "/api/auth"
+                  endpoints:
+                    - POST /register:
+                        description: "Регистрация нового пользователя"
+                        input: "UserRegister (username, email, password)"
+                        output: "UserResponse"
+                        errors:
+                          - 400: "Username или email уже существует"
+
+                    - POST /login:
+                        description: "Аутентификация пользователя"
+                        input: "UserLogin (username, password)"
+                        output: "UserResponse + Set-Cookie"
+                        errors:
+                          - 401: "Неверные данные"
+
+                    - POST /logout:
+                        description: "Завершение сессии"
+                        output: "Сообщение + Delete-Cookie"
+
+                    - GET /me:
+                        description: "Получение данных текущего пользователя"
+                        auth_required: true
+                        output: "UserResponse"
+                        errors:
+                          - 401: "Не аутентифицирован"
+
+              - admin.py:
+                  prefix: "/api/admin"
+                  auth_required: "admin role"
+                  endpoints:
+                    - GET /users:
+                        description: "Список всех пользователей"
+                        output: "List[UserResponse]"
+
+                    - PUT /users/{user_id}:
+                        description: "Обновление пользователя"
+                        input: "UserUpdate"
+                        output: "UserResponse"
+                        errors:
+                          - 403: "Требуются права администратора"
+                          - 404: "Пользователь не найден"
+                          - 400: "Дублирование username/email"
+
+                    - DELETE /users/{user_id}:
+                        description: "Удаление пользователя"
+                        restrictions:
+                          - "Нельзя удалить дефолтного админа (id=1)"
+                        errors:
+                          - 403: "Требуются права администратора"
+                          - 404: "Пользователь не найден"
+
+                    - GET /stats:
+                        description: "Статистика системы"
+                        output:
+                          - total_users: "Всего пользователей"
+                          - active_users: "Активных пользователей"
+                          - admin_count: "Количество администраторов"
+                          - recent_registrations: "Регистраций за 7 дней"
+
+      business_logic_layer:
+        description: "Модели и валидация данных"
+        components:
+          - name: "models.py"
+            description: "Pydantic модели"
+            models:
+              - UserRegister:
+                  fields:
+                    - username: "str (3-50 символов)"
+                    - email: "EmailStr"
+                    - password: "str (минимум 6 символов)"
+
+              - UserLogin:
+                  fields:
+                    - username: "str"
+                    - password: "str"
+
+              - UserResponse:
+                  fields:
+                    - id: "int"
+                    - username: "str"
+                    - email: "str"
+                    - role: "str"
+                    - created_at: "str"
+                    - is_active: "bool"
+
+              - UserUpdate:
+                  fields:
+                    - username: "Optional[str]"
+                    - email: "Optional[EmailStr]"
+                    - role: "Optional[Literal['user', 'admin']]"
+                    - is_active: "Optional[bool]"
+
+      data_access_layer:
+        description: "Управление базой данных"
+        components:
+          - name: "database.py"
+            description: "Database класс для работы с SQLite"
+            responsibilities:
+              - "Создание и инициализация БД"
+              - "Управление соединениями"
+              - "Создание таблиц"
+              - "Создание дефолтного администратора"
+
+            methods:
+              - get_connection: "Получить connection к БД"
+              - init_database: "Инициализировать таблицы и данные"
+
+  # База данных
+  database:
+    type: "SQLite"
+    file: "database.db"
+    auto_initialize: true
+
+    tables:
+      users:
+        description: "Таблица пользователей"
+        columns:
+          - id: "INTEGER PRIMARY KEY AUTOINCREMENT"
+          - username: "TEXT UNIQUE NOT NULL"
+          - email: "TEXT UNIQUE NOT NULL"
+          - password: "TEXT NOT NULL (plain text)"
+          - role: "TEXT DEFAULT 'user' CHECK(role IN ('user', 'admin'))"
+          - created_at: "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+          - is_active: "BOOLEAN DEFAULT 1"
+        constraints:
+          - "UNIQUE username"
+          - "UNIQUE email"
+          - "CHECK role IN ('user', 'admin')"
+        default_data:
+          - id: 1
+            username: "admin"
+            email: "admin@admin.com"
+            password: "admin123"
+            role: "admin"
+
+      sessions:
+        description: "Таблица сессий для аутентификации"
+        columns:
+          - id: "INTEGER PRIMARY KEY AUTOINCREMENT"
+          - user_id: "INTEGER NOT NULL"
+          - created_at: "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+        foreign_keys:
+          - user_id: "REFERENCES users(id) ON DELETE CASCADE"
+
+# ============================================
+# Потоки данных и взаимодействия
+# ============================================
+
+data_flows:
+
+  authentication_flow:
+    name: "Поток аутентификации"
+    steps:
+      - step: 1
+        actor: "Пользователь"
+        action: "Вводит credentials на LoginPage"
+
+      - step: 2
+        actor: "LoginPage"
+        action: "Вызывает AuthContext.login(username, password)"
+
+      - step: 3
+        actor: "AuthContext"
+        action: "Отправляет запрос через authAPI.login()"
+
+      - step: 4
+        actor: "Axios"
+        action: "POST http://localhost:8000/api/auth/login"
+        data: "{username, password}"
+
+      - step: 5
+        actor: "FastAPI auth router"
+        action: "Проверяет credentials в БД"
+        query: "SELECT * FROM users WHERE username=? AND password=?"
+
+      - step: 6
+        actor: "FastAPI auth router"
+        action: "Создаёт сессию"
+        query: "INSERT INTO sessions (user_id) VALUES (?)"
+
+      - step: 7
+        actor: "FastAPI auth router"
+        action: "Устанавливает cookie с session_id"
+        response: "UserResponse + Set-Cookie"
+
+      - step: 8
+        actor: "AuthContext"
+        action: "Сохраняет user в state"
+
+      - step: 9
+        actor: "LoginPage"
+        action: "Redirect на Dashboard"
+
+  admin_operations_flow:
+    name: "Административные операции"
+    steps:
+      - step: 1
+        actor: "Администратор"
+        action: "Открывает AdminPage"
+
+      - step: 2
+        actor: "AdminPage"
+        action: "Запрашивает список пользователей"
+        api_call: "GET /api/admin/users"
+
+      - step: 3
+        actor: "FastAPI admin router"
+        action: "Проверяет права (require_admin)"
+
+      - step: 4
+        actor: "FastAPI admin router"
+        action: "Получает пользователей из БД"
+        query: "SELECT * FROM users ORDER BY created_at DESC"
+
+      - step: 5
+        actor: "AdminPage"
+        action: "Отображает таблицу пользователей"
+
+      - step: 6
+        actor: "Администратор"
+        action: "Изменяет данные пользователя"
+
+      - step: 7
+        actor: "AdminPage"
+        action: "Отправляет обновление"
+        api_call: "PUT /api/admin/users/{id}"
+        data: "UserUpdate"
+
+      - step: 8
+        actor: "FastAPI admin router"
+        action: "Обновляет пользователя в БД"
+        query: "UPDATE users SET ... WHERE id=?"
+
+      - step: 9
+        actor: "AdminPage"
+        action: "Показывает уведомление об успехе"
+
+# ============================================
+# Безопасность
+# ============================================
+
+security:
+  authentication:
+    method: "Cookie-based sessions"
+    cookie_name: "session_id"
+    cookie_settings:
+      httponly: true
+      max_age: "604800 (7 дней)"
+      samesite: "lax"
+
+  authorization:
+    method: "Role-based (user/admin)"
+    roles:
+      - user: "Стандартные права пользователя"
+      - admin: "Полные права + управление пользователями"
+
+  cors:
+    enabled: true
+    allow_origins:
+      - "http://localhost:5173"
+    allow_credentials: true
+    allow_methods: ["*"]
+    allow_headers: ["*"]
+
+  notes:
+    - "⚠️ Пароли хранятся в plain text - ТОЛЬКО ДЛЯ РАЗРАБОТКИ"
+    - "⚠️ Нет JWT токенов - используются cookie-сессии"
+    - "⚠️ Нет HTTPS - только для локальной разработки"
+
+# ============================================
+# Развертывание
+# ============================================
+
+deployment:
+  environment: "Development"
+
+  backend_service:
+    host: "0.0.0.0"
+    port: 8000
+    reload: true
+    command: "python main.py"
+    startup_scripts:
+      windows: "start_backend.bat"
+      linux: "start_backend.sh"
+    dependencies: "requirements.txt"
+
+  frontend_service:
+    host: "localhost"
+    port: 5173
+    command: "npm run dev"
+    startup_scripts:
+      windows: "start_frontend.bat"
+      linux: "start_frontend.sh"
+    dependencies: "package.json"
+
+  database_service:
+    type: "Embedded SQLite"
+    file: "./database.db"
+    auto_create: true
+    initialization: "Автоматическая при старте backend"
+
+# ============================================
+# Функциональные требования
+# ============================================
+
+functional_requirements:
+
+  user_management:
+    - feature: "Регистрация"
+      description: "Пользователь может создать новый аккаунт"
+      validation:
+        - "Username: 3-50 символов, уникальный"
+        - "Email: валидный формат, уникальный"
+        - "Password: минимум 6 символов"
+
+    - feature: "Аутентификация"
+      description: "Вход в систему по username и password"
+      mechanism: "Cookie-based sessions"
+
+    - feature: "Профиль"
+      description: "Просмотр собственного профиля"
+
+  admin_panel:
+    - feature: "Управление пользователями"
+      description: "CRUD операции над пользователями"
+      operations:
+        - "Просмотр списка всех пользователей"
+        - "Редактирование данных пользователя"
+        - "Изменение роли (user/admin)"
+        - "Активация/деактивация пользователя"
+        - "Удаление пользователя (кроме admin id=1)"
+
+    - feature: "Статистика"
+      description: "Системная статистика и аналитика"
+      metrics:
+        - "Общее количество пользователей"
+        - "Количество активных пользователей"
+        - "Количество администраторов"
+        - "Новые регистрации за последние 7 дней"
+
+  ui_features:
+    - feature: "Адаптивный дизайн"
+      library: "Material-UI"
+
+    - feature: "Анимации"
+      library: "Framer Motion"
+      usage: "Плавные переходы страниц и компонентов"
+
+    - feature: "Уведомления"
+      library: "React Toastify"
+      types:
+        - success: "Успешные операции"
+        - error: "Ошибки"
+        - info: "Информационные сообщения"
+
+    - feature: "Графики"
+      library: "Recharts"
+      usage: "Визуализация статистики на AdminPage"
+
+# ============================================
+# Структура проекта
+# ============================================
+
+project_structure:
+  root: "premises_rental/"
+
+  directories:
+    backend:
+      path: "backend/"
+      files:
+        - "main.py - Главный файл FastAPI"
+        - "database.py - Управление SQLite"
+        - "models.py - Pydantic модели"
+        - "requirements.txt - Зависимости Python"
+        - "start_backend.bat - Скрипт запуска Windows"
+        - "start_backend.sh - Скрипт запуска Linux/Mac"
+      subdirectories:
+        routes:
+          - "__init__.py"
+          - "auth.py - Аутентификация"
+          - "admin.py - Админ-панель"
+          - "[feature].py - Специфичные endpoints"
+
+    frontend:
+      path: "frontend/"
+      files:
+        - "package.json - Зависимости Node.js"
+        - "vite.config.js - Конфигурация Vite"
+        - "index.html - HTML точка входа"
+        - "start_frontend.bat - Скрипт запуска Windows"
+        - "start_frontend.sh - Скрипт запуска Linux/Mac"
+      subdirectories:
+        src:
+          components:
+            - "auth/ - Компоненты аутентификации"
+            - "admin/ - Компоненты админ-панели"
+            - "layout/ - Layout, Navbar, Sidebar"
+          pages:
+            - "LoginPage.jsx"
+            - "RegisterPage.jsx"
+            - "DashboardPage.jsx"
+            - "AdminPage.jsx"
+          services:
+            - "api.js - Axios клиент и API функции"
+          context:
+            - "AuthContext.jsx - Контекст аутентификации"
+          root_files:
+            - "App.jsx - Главный компонент"
+            - "main.jsx - Точка входа React"
+            - "index.css - Глобальные стили"
+
+    database:
+      - "database.db - SQLite файл (автоматически создаваемый)"
+
+    documentation:
+      - "README.md - Инструкции по запуску"
+      - "CLAUDE_CODE_ROADMAP.md - Техническое задание"
+
+# ============================================
+# API Endpoints справочник
+# ============================================
+
+api_endpoints:
+  base_url: "http://localhost:8000"
+
+  authentication:
+    - endpoint: "POST /api/auth/register"
+      description: "Регистрация нового пользователя"
+      request_body:
+        username: "string (3-50 chars)"
+        email: "string (email format)"
+        password: "string (min 6 chars)"
+      response: "UserResponse"
+      status_codes:
+        - 200: "Успешная регистрация"
+        - 400: "Username или email уже существует"
+
+    - endpoint: "POST /api/auth/login"
+      description: "Вход в систему"
+      request_body:
+        username: "string"
+        password: "string"
+      response: "UserResponse + Set-Cookie"
+      status_codes:
+        - 200: "Успешный вход"
+        - 401: "Неверные credentials"
+
+    - endpoint: "POST /api/auth/logout"
+      description: "Выход из системы"
+      response: "{message: 'Logged out'}"
+      status_codes:
+        - 200: "Успешный выход"
+
+    - endpoint: "GET /api/auth/me"
+      description: "Получить текущего пользователя"
+      auth_required: true
+      response: "UserResponse"
+      status_codes:
+        - 200: "Данные пользователя"
+        - 401: "Не аутентифицирован"
+
+  admin:
+    - endpoint: "GET /api/admin/users"
+      description: "Список всех пользователей"
+      auth_required: "admin role"
+      response: "List[UserResponse]"
+      status_codes:
+        - 200: "Список пользователей"
+        - 403: "Требуются права администратора"
+
+    - endpoint: "PUT /api/admin/users/{user_id}"
+      description: "Обновить пользователя"
+      auth_required: "admin role"
+      request_body:
+        username: "Optional[string]"
+        email: "Optional[string]"
+        role: "Optional['user'|'admin']"
+        is_active: "Optional[boolean]"
+      response: "UserResponse"
+      status_codes:
+        - 200: "Пользователь обновлён"
+        - 400: "Некорректные данные"
+        - 403: "Требуются права администратора"
+        - 404: "Пользователь не найден"
+
+    - endpoint: "DELETE /api/admin/users/{user_id}"
+      description: "Удалить пользователя"
+      auth_required: "admin role"
+      constraints:
+        - "Нельзя удалить admin с id=1"
+      response: "{message: 'User deleted'}"
+      status_codes:
+        - 200: "Пользователь удалён"
+        - 400: "Нельзя удалить дефолтного админа"
+        - 403: "Требуются права администратора"
+        - 404: "Пользователь не найден"
+
+    - endpoint: "GET /api/admin/stats"
+      description: "Статистика системы"
+      auth_required: "admin role"
+      response:
+        total_users: "number"
+        active_users: "number"
+        admin_count: "number"
+        recent_registrations: "number"
+      status_codes:
+        - 200: "Статистика"
+        - 403: "Требуются права администратора"
+
+# ============================================
+# Метаданные
+# ============================================
+
+metadata:
+  created_by: "Claude Code"
+  created_at: "2025-11-05"
+  architecture_style: "Layered Architecture + REST API"
+  design_patterns:
+    - "MVC (Model-View-Controller)"
+    - "Repository Pattern (Database access)"
+    - "Context API (State management)"
+    - "Protected Routes (Authorization)"
+
+  quality_attributes:
+    maintainability: "Модульная структура, разделение concerns"
+    testability: "FastAPI автоматическая документация /docs"
+    scalability: "Возможность добавления новых routes и компонентов"
+    usability: "Material-UI + анимации для лучшего UX"
+
+  limitations:
+    - "⚠️ Разработка только для локального использования"
+    - "⚠️ Plain text пароли - НЕ для production"
+    - "⚠️ Отсутствие HTTPS"
+    - "⚠️ Простая cookie-аутентификация без JWT"
+    - "⚠️ SQLite - не для высоконагруженных систем"
