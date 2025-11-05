@@ -34,46 +34,48 @@ const AppRoutes = () => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div style={{ textAlign: 'center', padding: 50 }}>Загрузка...</div>;
-  }
-
-  // Redirect to login if not authenticated
-  if (!user && !['/login', '/register'].includes(window.location.pathname)) {
-    return <Navigate to="/login" replace />;
+    return <div style={{ textAlign: 'center', padding: '50px' }}>Загрузка...</div>;
   }
 
   return (
-    <Layout>
-      <Routes>
-        <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
-        <Route path="/register" element={user ? <Navigate to="/" replace /> : <Register />} />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
+    <Routes>
+      {/* Public routes without Layout */}
+      <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+      <Route path="/register" element={user ? <Navigate to="/" replace /> : <Register />} />
+
+      {/* Protected routes with Layout */}
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <Layout>
               <Home />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/rooms"
-          element={
-            <ProtectedRoute>
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/rooms"
+        element={
+          <ProtectedRoute>
+            <Layout>
               <Rooms />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute adminOnly>
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute adminOnly>
+            <Layout>
               <AdminPanel />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<Navigate to={user ? "/" : "/login"} replace />} />
-      </Routes>
-    </Layout>
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route path="*" element={<Navigate to={user ? "/" : "/login"} replace />} />
+    </Routes>
   );
 };
 

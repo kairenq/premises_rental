@@ -28,50 +28,71 @@ const Login = () => {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        minHeight: '80vh',
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: '20px',
       }}
     >
-      <Card title="Вход в систему" style={{ width: 400 }}>
+      <Card
+        title={
+          <div style={{ textAlign: 'center', fontSize: '24px', fontWeight: 'bold' }}>
+            Вход в систему
+          </div>
+        }
+        style={{
+          width: '100%',
+          maxWidth: 420,
+          boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+          borderRadius: '12px'
+        }}
+      >
         <Form name="login" onFinish={onFinish} layout="vertical">
           <Form.Item
             name="email"
+            label="Email"
             rules={[
               { required: true, message: 'Введите ваш email!' },
               { type: 'email', message: 'Введите корректный email!' },
             ]}
           >
             <Input
-              prefix={<UserOutlined />}
-              placeholder="Email"
+              prefix={<UserOutlined style={{ color: '#667eea' }} />}
+              placeholder="Введите ваш email"
               size="large"
             />
           </Form.Item>
 
           <Form.Item
             name="password"
+            label="Пароль"
             rules={[{ required: true, message: 'Введите пароль!' }]}
           >
             <Input.Password
-              prefix={<LockOutlined />}
-              placeholder="Пароль"
+              prefix={<LockOutlined style={{ color: '#667eea' }} />}
+              placeholder="Введите ваш пароль"
               size="large"
             />
           </Form.Item>
 
-          <Form.Item>
+          <Form.Item style={{ marginTop: '24px' }}>
             <Button
               type="primary"
               htmlType="submit"
               loading={loading}
               block
               size="large"
+              style={{
+                height: '45px',
+                fontSize: '16px',
+                fontWeight: '500'
+              }}
             >
               Войти
             </Button>
           </Form.Item>
 
-          <div style={{ textAlign: 'center' }}>
-            Нет аккаунта? <Link to="/register">Зарегистрируйтесь!</Link>
+          <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '15px' }}>
+            Нет аккаунта? <Link to="/register" style={{ fontWeight: '500' }}>Зарегистрируйтесь!</Link>
           </div>
         </Form>
       </Card>
