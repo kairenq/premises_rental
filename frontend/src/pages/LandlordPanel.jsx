@@ -287,6 +287,7 @@ const RoomsTab = () => {
   const uploadProps = {
     multiple: true,
     fileList: fileList,
+    listType: "picture-card",
     beforeUpload: (file) => {
       const isImage = file.type.startsWith('image/');
       if (!isImage) {
@@ -298,9 +299,16 @@ const RoomsTab = () => {
         message.error('Размер файла не должен превышать 5MB!');
         return Upload.LIST_IGNORE;
       }
+      // Prevent auto upload
       return false;
     },
     onChange: ({ fileList: newFileList }) => {
+      setFileList(newFileList);
+    },
+    onRemove: (file) => {
+      const index = fileList.indexOf(file);
+      const newFileList = fileList.slice();
+      newFileList.splice(index, 1);
       setFileList(newFileList);
     },
   };
@@ -311,18 +319,28 @@ const RoomsTab = () => {
       return;
     }
 
+    const loadingMessage = message.loading('Загрузка фотографий...', 0);
+
     try {
+      let successCount = 0;
       for (const file of fileList) {
         const formData = new FormData();
-        formData.append('file', file.originFileObj);
+        // file.originFileObj содержит настоящий файл
+        const actualFile = file.originFileObj || file;
+        formData.append('file', actualFile);
+
         await roomsAPI.uploadPhoto(selectedRoom.room_id, formData);
+        successCount++;
       }
-      message.success(`Загружено ${fileList.length} фото!`);
+      loadingMessage();
+      message.success(`Загружено ${successCount} фото!`);
       setPhotoModalVisible(false);
       setFileList([]);
       fetchData();
     } catch (error) {
-      message.error('Не удалось загрузить фото');
+      loadingMessage();
+      message.error('Не удалось загрузить фото: ' + (error.response?.data?.detail || error.message));
+      console.error('Upload error:', error);
     }
   };
 

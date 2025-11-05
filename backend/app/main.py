@@ -2,12 +2,20 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from .core.config import settings
-from .db.database import engine, Base
+from .db.database import engine, Base, SessionLocal
+from .db.init_db import init_database
 from .api import auth, rooms, companies, buildings, leases, reviews, maintenance, stats
 import os
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
+
+# Initialize database with test data
+db = SessionLocal()
+try:
+    init_database(db)
+finally:
+    db.close()
 
 # Create FastAPI app
 app = FastAPI(

@@ -110,73 +110,121 @@ const Home = () => {
         </Col>
       </Row>
 
-      <Row gutter={16} style={{ marginTop: 30 }}>
+      <Row gutter={[24, 24]} style={{ marginTop: 40 }}>
         <Col xs={24} md={8}>
           <Card
             hoverable
+            style={{
+              height: '100%',
+              borderRadius: 12,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              transition: 'all 0.3s ease',
+            }}
+            bodyStyle={{
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
             cover={
               <div
                 style={{
-                  height: 200,
-                  background: '#f0f0f0',
+                  height: 220,
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  borderRadius: '12px 12px 0 0',
                 }}
               >
-                <ShopOutlined style={{ fontSize: 64, color: '#1890ff' }} />
+                <ShopOutlined style={{ fontSize: 80, color: 'white' }} />
               </div>
             }
           >
             <Card.Meta
-              title="Современные офисы"
-              description="Найдите современные офисные помещения со всеми удобствами для вашего бизнеса"
+              title={<div style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 10 }}>Современные офисы</div>}
+              description={
+                <div style={{ fontSize: 15, lineHeight: 1.6, minHeight: 60 }}>
+                  Найдите современные офисные помещения со всеми удобствами для вашего бизнеса
+                </div>
+              }
             />
           </Card>
         </Col>
         <Col xs={24} md={8}>
           <Card
             hoverable
+            style={{
+              height: '100%',
+              borderRadius: 12,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              transition: 'all 0.3s ease',
+            }}
+            bodyStyle={{
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
             cover={
               <div
                 style={{
-                  height: 200,
-                  background: '#f0f0f0',
+                  height: 220,
+                  background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  borderRadius: '12px 12px 0 0',
                 }}
               >
-                <HomeOutlined style={{ fontSize: 64, color: '#52c41a' }} />
+                <HomeOutlined style={{ fontSize: 80, color: 'white' }} />
               </div>
             }
           >
             <Card.Meta
-              title="Коммерческие помещения"
-              description="Торговые и коммерческие помещения в лучших локациях"
+              title={<div style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 10 }}>Коммерческие помещения</div>}
+              description={
+                <div style={{ fontSize: 15, lineHeight: 1.6, minHeight: 60 }}>
+                  Торговые и коммерческие помещения в лучших локациях города
+                </div>
+              }
             />
           </Card>
         </Col>
         <Col xs={24} md={8}>
           <Card
             hoverable
+            style={{
+              height: '100%',
+              borderRadius: 12,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              transition: 'all 0.3s ease',
+            }}
+            bodyStyle={{
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
             cover={
               <div
                 style={{
-                  height: 200,
-                  background: '#f0f0f0',
+                  height: 220,
+                  background: 'linear-gradient(135deg, #fa8c16 0%, #faad14 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  borderRadius: '12px 12px 0 0',
                 }}
               >
-                <FileTextOutlined style={{ fontSize: 64, color: '#fa8c16' }} />
+                <FileTextOutlined style={{ fontSize: 80, color: 'white' }} />
               </div>
             }
           >
             <Card.Meta
-              title="Простая аренда"
-              description="Простой и прозрачный процесс аренды с онлайн-управлением"
+              title={<div style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 10 }}>Простая аренда</div>}
+              description={
+                <div style={{ fontSize: 15, lineHeight: 1.6, minHeight: 60 }}>
+                  Простой и прозрачный процесс аренды с онлайн-управлением
+                </div>
+              }
             />
           </Card>
         </Col>
