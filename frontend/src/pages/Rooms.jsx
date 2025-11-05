@@ -26,6 +26,7 @@ import {
 } from '@ant-design/icons';
 import { roomsAPI, favoritesAPI, reviewsAPI, leasesAPI, categoriesAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { getImageUrl } from '../utils/imageUrl';
 import dayjs from 'dayjs';
 
 const { RangePicker } = DatePicker;
@@ -210,7 +211,7 @@ const Rooms = () => {
                   room.photos && room.photos.length > 0 ? (
                     <Image
                       alt={room.room_number}
-                      src={room.photos[0].photo_url}
+                      src={getImageUrl(room.photos[0].photo_url)}
                       height={200}
                       style={{ objectFit: 'cover' }}
                     />
