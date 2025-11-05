@@ -16,26 +16,28 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
-# CORS middleware - Filter out empty strings
-cors_origins = [origin for origin in settings.BACKEND_CORS_ORIGINS if origin]
+# CORS middleware - Allow both specific origins and Netlify regex
+cors_origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://premisesrental.netlify.app",  # Конкретный домен Netlify
+]
 
-# In production, allow all Netlify apps or use regex
-if settings.ENVIRONMENT == "production":
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origin_regex=r"https://.*\.netlify\.app",
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-else:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=cors_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+# Add environment variable if set
+if settings.BACKEND_CORS_ORIGINS:
+    for origin in settings.BACKEND_CORS_ORIGINS:
+        if origin and origin not in cors_origins:
+            cors_origins.append(origin)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,
+    allow_origin_regex=r"https://.*\.netlify\.app",  # Разрешить все поддомены Netlify
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+)
 
 # Create uploads directory
 os.makedirs("uploads", exist_ok=True)
