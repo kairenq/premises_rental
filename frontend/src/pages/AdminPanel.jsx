@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, Table, Button, Modal, Form, Input, Select, message, Space, Tag, Popconfirm, Card, Row, Col, Statistic, InputNumber } from 'antd';
 import { UserOutlined, HomeOutlined, ShopOutlined, BankOutlined, TagOutlined, PlusOutlined, EditOutlined, DeleteOutlined, BarChartOutlined } from '@ant-design/icons';
-import usersAPI from '../api/users';
-import buildingsAPI from '../api/buildings';
-import roomsAPI from '../api/rooms';
-import companiesAPI from '../api/companies';
-import categoriesAPI from '../api/categories';
-import statsAPI from '../api/stats';
+import { usersAPI, buildingsAPI, roomsAPI, companiesAPI, categoriesAPI, statsAPI } from '../services/api';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -74,7 +69,7 @@ const AdminPanel = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const response = await usersAPI.getUsers();
+      const response = await usersAPI.getAll();
       setUsers(response.data);
     } catch (error) {
       message.error('Не удалось загрузить пользователей');
@@ -91,7 +86,7 @@ const AdminPanel = () => {
 
   const handleUserDelete = async (userId) => {
     try {
-      await usersAPI.deleteUser(userId);
+      await usersAPI.delete(userId);
       message.success('Пользователь удален');
       fetchUsers();
     } catch (error) {
@@ -102,10 +97,10 @@ const AdminPanel = () => {
   const handleUserSubmit = async (values) => {
     try {
       if (editingUser) {
-        await usersAPI.updateUser(editingUser.user_id, values);
+        await usersAPI.update(editingUser.user_id, values);
         message.success('Пользователь обновлен');
       } else {
-        await usersAPI.createUser(values);
+        await usersAPI.create(values);
         message.success('Пользователь создан');
       }
       setUserModalVisible(false);
@@ -159,7 +154,7 @@ const AdminPanel = () => {
   const fetchBuildings = async () => {
     setLoading(true);
     try {
-      const response = await buildingsAPI.getBuildings();
+      const response = await buildingsAPI.getAll({});
       setBuildings(response.data);
     } catch (error) {
       message.error('Не удалось загрузить здания');
@@ -176,7 +171,7 @@ const AdminPanel = () => {
 
   const handleBuildingDelete = async (buildingId) => {
     try {
-      await buildingsAPI.deleteBuilding(buildingId);
+      await buildingsAPI.delete(buildingId);
       message.success('Здание удалено');
       fetchBuildings();
     } catch (error) {
@@ -187,10 +182,10 @@ const AdminPanel = () => {
   const handleBuildingSubmit = async (values) => {
     try {
       if (editingBuilding) {
-        await buildingsAPI.updateBuilding(editingBuilding.building_id, values);
+        await buildingsAPI.update(editingBuilding.building_id, values);
         message.success('Здание обновлено');
       } else {
-        await buildingsAPI.createBuilding(values);
+        await buildingsAPI.create(values);
         message.success('Здание создано');
       }
       setBuildingModalVisible(false);
@@ -234,14 +229,14 @@ const AdminPanel = () => {
   const fetchRooms = async () => {
     setLoading(true);
     try {
-      const response = await roomsAPI.getRooms();
+      const response = await roomsAPI.getAll({});
       setRooms(response.data);
 
       // Fetch buildings and categories for dropdowns
-      const buildingsRes = await buildingsAPI.getBuildings();
+      const buildingsRes = await buildingsAPI.getAll({});
       setBuildings(buildingsRes.data);
 
-      const categoriesRes = await categoriesAPI.getCategories();
+      const categoriesRes = await categoriesAPI.getAll();
       setCategories(categoriesRes.data);
     } catch (error) {
       message.error('Не удалось загрузить помещения');
@@ -258,7 +253,7 @@ const AdminPanel = () => {
 
   const handleRoomDelete = async (roomId) => {
     try {
-      await roomsAPI.deleteRoom(roomId);
+      await roomsAPI.delete(roomId);
       message.success('Помещение удалено');
       fetchRooms();
     } catch (error) {
@@ -269,10 +264,10 @@ const AdminPanel = () => {
   const handleRoomSubmit = async (values) => {
     try {
       if (editingRoom) {
-        await roomsAPI.updateRoom(editingRoom.room_id, values);
+        await roomsAPI.update(editingRoom.room_id, values);
         message.success('Помещение обновлено');
       } else {
-        await roomsAPI.createRoom(values);
+        await roomsAPI.create(values);
         message.success('Помещение создано');
       }
       setRoomModalVisible(false);
@@ -329,7 +324,7 @@ const AdminPanel = () => {
   const fetchCompanies = async () => {
     setLoading(true);
     try {
-      const response = await companiesAPI.getCompanies();
+      const response = await companiesAPI.getAll({});
       setCompanies(response.data);
     } catch (error) {
       message.error('Не удалось загрузить компании');
@@ -346,7 +341,7 @@ const AdminPanel = () => {
 
   const handleCompanyDelete = async (companyId) => {
     try {
-      await companiesAPI.deleteCompany(companyId);
+      await companiesAPI.delete(companyId);
       message.success('Компания удалена');
       fetchCompanies();
     } catch (error) {
@@ -357,10 +352,10 @@ const AdminPanel = () => {
   const handleCompanySubmit = async (values) => {
     try {
       if (editingCompany) {
-        await companiesAPI.updateCompany(editingCompany.company_id, values);
+        await companiesAPI.update(editingCompany.company_id, values);
         message.success('Компания обновлена');
       } else {
-        await companiesAPI.createCompany(values);
+        await companiesAPI.create(values);
         message.success('Компания создана');
       }
       setCompanyModalVisible(false);
@@ -406,7 +401,7 @@ const AdminPanel = () => {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const response = await categoriesAPI.getCategories();
+      const response = await categoriesAPI.getAll();
       setCategories(response.data);
     } catch (error) {
       message.error('Не удалось загрузить категории');
@@ -423,7 +418,7 @@ const AdminPanel = () => {
 
   const handleCategoryDelete = async (categoryId) => {
     try {
-      await categoriesAPI.deleteCategory(categoryId);
+      await categoriesAPI.delete(categoryId);
       message.success('Категория удалена');
       fetchCategories();
     } catch (error) {
@@ -434,10 +429,10 @@ const AdminPanel = () => {
   const handleCategorySubmit = async (values) => {
     try {
       if (editingCategory) {
-        await categoriesAPI.updateCategory(editingCategory.category_id, values);
+        await categoriesAPI.update(editingCategory.category_id, values);
         message.success('Категория обновлена');
       } else {
-        await categoriesAPI.createCategory(values);
+        await categoriesAPI.create(values);
         message.success('Категория создана');
       }
       setCategoryModalVisible(false);
