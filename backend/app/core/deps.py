@@ -83,6 +83,18 @@ def get_current_admin(
     return current_user
 
 
+def get_current_landlord_or_admin(
+    current_user: User = Depends(get_current_user)
+) -> User:
+    """Get current user and verify landlord or admin role."""
+    if current_user.role not in ["admin", "landlord"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions. Landlord or admin role required.",
+        )
+    return current_user
+
+
 def get_current_user_optional(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: Session = Depends(get_db)

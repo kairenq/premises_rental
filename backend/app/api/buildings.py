@@ -4,7 +4,7 @@ from typing import List
 from ..db.database import get_db
 from ..schemas.schemas import BuildingCreate, BuildingUpdate, BuildingResponse
 from ..models.models import Building, User
-from ..core.deps import get_current_admin
+from ..core.deps import get_current_admin, get_current_landlord_or_admin
 
 router = APIRouter(prefix="/buildings", tags=["Buildings"])
 
@@ -32,9 +32,9 @@ def get_building(building_id: int, db: Session = Depends(get_db)):
 def create_building(
     building_data: BuildingCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin)
+    current_user: User = Depends(get_current_landlord_or_admin)
 ):
-    """Create a new building (admin only)."""
+    """Create a new building (landlord or admin)."""
     new_building = Building(**building_data.model_dump())
     db.add(new_building)
     db.commit()
@@ -47,9 +47,9 @@ def update_building(
     building_id: int,
     building_data: BuildingUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin)
+    current_user: User = Depends(get_current_landlord_or_admin)
 ):
-    """Update building (admin only)."""
+    """Update building (landlord or admin)."""
     building = db.query(Building).filter(Building.building_id == building_id).first()
     if not building:
         raise HTTPException(
@@ -70,9 +70,9 @@ def update_building(
 def delete_building(
     building_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin)
+    current_user: User = Depends(get_current_landlord_or_admin)
 ):
-    """Delete building (admin only)."""
+    """Delete building (landlord or admin)."""
     building = db.query(Building).filter(Building.building_id == building_id).first()
     if not building:
         raise HTTPException(

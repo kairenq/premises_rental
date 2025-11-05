@@ -4,7 +4,7 @@ from typing import List, Optional
 from ..db.database import get_db
 from ..schemas.schemas import RoomCreate, RoomUpdate, RoomResponse, RoomPhotoResponse
 from ..models.models import Room, RoomPhoto, User
-from ..core.deps import get_current_user, get_current_admin
+from ..core.deps import get_current_user, get_current_admin, get_current_landlord_or_admin
 import os
 import shutil
 from uuid import uuid4
@@ -57,9 +57,9 @@ def get_room(room_id: int, db: Session = Depends(get_db)):
 def create_room(
     room_data: RoomCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin)
+    current_user: User = Depends(get_current_landlord_or_admin)
 ):
-    """Create a new room (admin only)."""
+    """Create a new room (landlord or admin)."""
     new_room = Room(**room_data.model_dump())
     db.add(new_room)
     db.commit()
@@ -72,9 +72,9 @@ def update_room(
     room_id: int,
     room_data: RoomUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin)
+    current_user: User = Depends(get_current_landlord_or_admin)
 ):
-    """Update room (admin only)."""
+    """Update room (landlord or admin)."""
     room = db.query(Room).filter(Room.room_id == room_id).first()
     if not room:
         raise HTTPException(
@@ -95,9 +95,9 @@ def update_room(
 def delete_room(
     room_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin)
+    current_user: User = Depends(get_current_landlord_or_admin)
 ):
-    """Delete room (admin only)."""
+    """Delete room (landlord or admin)."""
     room = db.query(Room).filter(Room.room_id == room_id).first()
     if not room:
         raise HTTPException(
@@ -116,9 +116,9 @@ async def upload_room_photo(
     file: UploadFile = File(...),
     description: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin)
+    current_user: User = Depends(get_current_landlord_or_admin)
 ):
-    """Upload a photo for a room (admin only)."""
+    """Upload a photo for a room (landlord or admin)."""
     room = db.query(Room).filter(Room.room_id == room_id).first()
     if not room:
         raise HTTPException(
@@ -154,9 +154,9 @@ async def upload_room_photo(
 def delete_room_photo(
     photo_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin)
+    current_user: User = Depends(get_current_landlord_or_admin)
 ):
-    """Delete room photo (admin only)."""
+    """Delete room photo (landlord or admin)."""
     photo = db.query(RoomPhoto).filter(RoomPhoto.photo_id == photo_id).first()
     if not photo:
         raise HTTPException(
