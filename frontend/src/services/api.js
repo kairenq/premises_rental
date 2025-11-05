@@ -18,10 +18,26 @@ api.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('🔑 Token added to request:', config.url, token.substring(0, 20) + '...');
+    } else {
+      console.log('⚠️ No token found for request:', config.url);
     }
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Handle response errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      console.log('❌ 401 Unauthorized - токен невалидный или отсутствует');
+      // Можно добавить автоматический logout
+      localStorage.removeItem('token');
+    }
     return Promise.reject(error);
   }
 );

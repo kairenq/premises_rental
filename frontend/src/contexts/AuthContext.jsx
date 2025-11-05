@@ -26,7 +26,15 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const response = await authAPI.login({ email, password });
-    localStorage.setItem('token', response.data.access_token);
+    const token = response.data.access_token;
+
+    // Сохраняем токен
+    localStorage.setItem('token', token);
+
+    // Небольшая задержка чтобы убедиться что токен сохранён
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Теперь проверяем пользователя
     await checkAuth();
   };
 

@@ -14,40 +14,61 @@ def get_current_user(
     db: Session = Depends(get_db)
 ) -> User:
     """Get current authenticated user."""
-    token = credentials.credentials
-    payload = decode_access_token(token)
-
-    if payload is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    user_id = payload.get("sub")
-    if user_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-        )
-
-    # Convert to int if it's a string
     try:
-        user_id = int(user_id)
-    except (ValueError, TypeError):
+        token = credentials.credentials
+        print(f"🔑 Received token: {token[:20]}...")
+
+        payload = decode_access_token(token)
+        print(f"📦 Decoded payload: {payload}")
+
+        if payload is None:
+            print("❌ Payload is None - invalid token")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        user_id = payload.get("sub")
+        print(f"👤 User ID from token: {user_id} (type: {type(user_id)})")
+
+        if user_id is None:
+            print("❌ User ID is None in payload")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials",
+            )
+
+        # Convert to int if it's a string
+        try:
+            user_id = int(user_id)
+            print(f"✅ Converted user_id to int: {user_id}")
+        except (ValueError, TypeError) as e:
+            print(f"❌ Failed to convert user_id to int: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid user ID in token",
+            )
+
+        user = db.query(User).filter(User.user_id == user_id).first()
+        if user is None:
+            print(f"❌ User not found in database with ID: {user_id}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found",
+            )
+
+        print(f"✅ User found: {user.email}")
+        return user
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Unexpected error in get_current_user: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid user ID in token",
+            detail=f"Authentication error: {str(e)}",
         )
-
-    user = db.query(User).filter(User.user_id == user_id).first()
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
-
-    return user
 
 
 def get_current_admin(
