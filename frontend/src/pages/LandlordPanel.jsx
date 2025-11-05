@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Tabs,
   Table,
   Button,
   Modal,
@@ -19,14 +18,11 @@ import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
-  UploadOutlined,
   InboxOutlined,
 } from '@ant-design/icons';
 import {
-  buildingsAPI,
   roomsAPI,
   categoriesAPI,
-  companiesAPI,
 } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { getImageUrl } from '../utils/imageUrl';
@@ -34,197 +30,7 @@ import { getImageUrl } from '../utils/imageUrl';
 const { Dragger } = Upload;
 
 const LandlordPanel = () => {
-  const [activeTab, setActiveTab] = useState('buildings');
-
-  return (
-    <div>
-      <h1>Панель арендодателя</h1>
-      <Tabs
-        activeKey={activeTab}
-        onChange={setActiveTab}
-        items={[
-          { key: 'buildings', label: 'Мои здания', children: <BuildingsTab /> },
-          { key: 'rooms', label: 'Мои помещения', children: <RoomsTab /> },
-        ]}
-      />
-    </div>
-  );
-};
-
-// Buildings Tab
-const BuildingsTab = () => {
-  const [buildings, setBuildings] = useState([]);
-  const [companies, setCompanies] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editingBuilding, setEditingBuilding] = useState(null);
-  const [form] = Form.useForm();
-  const { user } = useAuth();
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [buildingsRes, companiesRes] = await Promise.all([
-        buildingsAPI.getAll({}),
-        companiesAPI.getAll({}),
-      ]);
-      setBuildings(buildingsRes.data);
-      setCompanies(companiesRes.data);
-    } catch (error) {
-      message.error('Не удалось загрузить данные');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = async (values) => {
-    try {
-      if (editingBuilding) {
-        await buildingsAPI.update(editingBuilding.building_id, values);
-        message.success('Здание успешно обновлено');
-      } else {
-        await buildingsAPI.create(values);
-        message.success('Здание успешно создано');
-      }
-      setModalVisible(false);
-      form.resetFields();
-      setEditingBuilding(null);
-      fetchData();
-    } catch (error) {
-      message.error(error.response?.data?.detail || 'Операция не удалась');
-    }
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      await buildingsAPI.delete(id);
-      message.success('Здание успешно удалено');
-      fetchData();
-    } catch (error) {
-      message.error('Не удалось удалить здание');
-    }
-  };
-
-  const columns = [
-    { title: 'Название', dataIndex: 'name', key: 'name' },
-    { title: 'Адрес', dataIndex: 'address', key: 'address' },
-    { title: 'Этажей', dataIndex: 'total_floors', key: 'total_floors' },
-    {
-      title: 'Действия',
-      key: 'actions',
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="primary"
-            icon={<EditOutlined />}
-            onClick={() => {
-              setEditingBuilding(record);
-              form.setFieldsValue(record);
-              setModalVisible(true);
-            }}
-          />
-          <Popconfirm
-            title="Удалить это здание?"
-            onConfirm={() => handleDelete(record.building_id)}
-          >
-            <Button danger icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
-
-  return (
-    <div>
-      <Button
-        type="primary"
-        icon={<PlusOutlined />}
-        onClick={() => {
-          setEditingBuilding(null);
-          form.resetFields();
-          setModalVisible(true);
-        }}
-        style={{ marginBottom: 16 }}
-      >
-        Добавить здание
-      </Button>
-
-      <Table
-        columns={columns}
-        dataSource={buildings}
-        rowKey="building_id"
-        loading={loading}
-      />
-
-      <Modal
-        title={editingBuilding ? 'Редактировать здание' : 'Добавить здание'}
-        open={modalVisible}
-        onCancel={() => {
-          setModalVisible(false);
-          setEditingBuilding(null);
-          form.resetFields();
-        }}
-        footer={null}
-        width={600}
-      >
-        <Form form={form} onFinish={handleSubmit} layout="vertical">
-          <Form.Item
-            name="company_id"
-            label="Компания"
-            rules={[{ required: true, message: 'Выберите компанию!' }]}
-          >
-            <Select placeholder="Выберите компанию">
-              {companies.map((c) => (
-                <Select.Option key={c.company_id} value={c.company_id}>
-                  {c.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            name="name"
-            label="Название здания"
-            rules={[{ required: true, message: 'Введите название!' }]}
-          >
-            <Input placeholder="Например: Бизнес-центр Альфа" />
-          </Form.Item>
-
-          <Form.Item
-            name="address"
-            label="Адрес"
-            rules={[{ required: true, message: 'Введите адрес!' }]}
-          >
-            <Input placeholder="Например: ул. Ленина, 123" />
-          </Form.Item>
-
-          <Form.Item name="total_floors" label="Количество этажей">
-            <InputNumber style={{ width: '100%' }} min={1} placeholder="10" />
-          </Form.Item>
-
-          <Form.Item name="description" label="Описание">
-            <Input.TextArea rows={4} placeholder="Опишите здание..." />
-          </Form.Item>
-
-          <Form.Item>
-            <Button type="primary" htmlType="submit" block size="large">
-              {editingBuilding ? 'Обновить' : 'Создать'}
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
-    </div>
-  );
-};
-
-// Rooms Tab with Photo Upload
-const RoomsTab = () => {
   const [rooms, setRooms] = useState([]);
-  const [buildings, setBuildings] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -232,6 +38,7 @@ const RoomsTab = () => {
   const [editingRoom, setEditingRoom] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [fileList, setFileList] = useState([]);
+  const [newRoomFileList, setNewRoomFileList] = useState([]);
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -241,13 +48,11 @@ const RoomsTab = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [roomsRes, buildingsRes, categoriesRes] = await Promise.all([
+      const [roomsRes, categoriesRes] = await Promise.all([
         roomsAPI.getAll({}),
-        buildingsAPI.getAll({}),
         categoriesAPI.getAll(),
       ]);
       setRooms(roomsRes.data);
-      setBuildings(buildingsRes.data);
       setCategories(categoriesRes.data);
     } catch (error) {
       message.error('Не удалось загрузить данные');
@@ -258,16 +63,39 @@ const RoomsTab = () => {
 
   const handleSubmit = async (values) => {
     try {
+      let roomId;
       if (editingRoom) {
         await roomsAPI.update(editingRoom.room_id, values);
+        roomId = editingRoom.room_id;
         message.success('Помещение успешно обновлено');
       } else {
-        await roomsAPI.create(values);
+        const response = await roomsAPI.create(values);
+        roomId = response.data.room_id;
         message.success('Помещение успешно создано');
+
+        // Upload photos if any
+        if (newRoomFileList.length > 0) {
+          const loadingMessage = message.loading('Загрузка фотографий...', 0);
+          try {
+            for (const file of newRoomFileList) {
+              const formData = new FormData();
+              const actualFile = file.originFileObj || file;
+              formData.append('file', actualFile);
+              await roomsAPI.uploadPhoto(roomId, formData);
+            }
+            loadingMessage();
+            message.success(`Загружено ${newRoomFileList.length} фото!`);
+          } catch (error) {
+            loadingMessage();
+            message.error('Помещение создано, но не удалось загрузить фото');
+          }
+        }
       }
+
       setModalVisible(false);
       form.resetFields();
       setEditingRoom(null);
+      setNewRoomFileList([]);
       fetchData();
     } catch (error) {
       message.error(error.response?.data?.detail || 'Операция не удалась');
@@ -299,7 +127,6 @@ const RoomsTab = () => {
         message.error('Размер файла не должен превышать 5MB!');
         return Upload.LIST_IGNORE;
       }
-      // Prevent auto upload
       return false;
     },
     onChange: ({ fileList: newFileList }) => {
@@ -310,6 +137,34 @@ const RoomsTab = () => {
       const newFileList = fileList.slice();
       newFileList.splice(index, 1);
       setFileList(newFileList);
+    },
+  };
+
+  const newRoomUploadProps = {
+    multiple: true,
+    fileList: newRoomFileList,
+    listType: "picture-card",
+    beforeUpload: (file) => {
+      const isImage = file.type.startsWith('image/');
+      if (!isImage) {
+        message.error('Можно загружать только изображения!');
+        return Upload.LIST_IGNORE;
+      }
+      const isLt5M = file.size / 1024 / 1024 < 5;
+      if (!isLt5M) {
+        message.error('Размер файла не должен превышать 5MB!');
+        return Upload.LIST_IGNORE;
+      }
+      return false;
+    },
+    onChange: ({ fileList: newFileList }) => {
+      setNewRoomFileList(newFileList);
+    },
+    onRemove: (file) => {
+      const index = newRoomFileList.indexOf(file);
+      const newFileList = newRoomFileList.slice();
+      newFileList.splice(index, 1);
+      setNewRoomFileList(newFileList);
     },
   };
 
@@ -325,7 +180,6 @@ const RoomsTab = () => {
       let successCount = 0;
       for (const file of fileList) {
         const formData = new FormData();
-        // file.originFileObj содержит настоящий файл
         const actualFile = file.originFileObj || file;
         formData.append('file', actualFile);
 
@@ -347,17 +201,25 @@ const RoomsTab = () => {
   const columns = [
     { title: 'Номер', dataIndex: 'room_number', key: 'room_number' },
     {
-      title: 'Здание',
-      dataIndex: ['building', 'name'],
-      key: 'building',
+      title: 'Категория',
+      dataIndex: ['category', 'name'],
+      key: 'category',
     },
-    { title: 'Этаж', dataIndex: 'floor', key: 'floor' },
     { title: 'Площадь (м²)', dataIndex: 'area', key: 'area' },
     {
       title: 'Цена/мес',
       dataIndex: 'price_per_month',
       key: 'price_per_month',
-      render: (price) => `$${price}`,
+      render: (price) => `${price} ₽`,
+    },
+    {
+      title: 'Статус',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status) => {
+        const labels = { available: 'Доступно', rented: 'Арендовано', maintenance: 'Обслуживание' };
+        return labels[status] || status;
+      }
     },
     {
       title: 'Фото',
@@ -380,21 +242,29 @@ const RoomsTab = () => {
               form.setFieldsValue(record);
               setModalVisible(true);
             }}
-          />
+            size="small"
+          >
+            Изменить
+          </Button>
           <Button
-            icon={<UploadOutlined />}
+            icon={<PlusOutlined />}
             onClick={() => {
               setSelectedRoom(record);
               setPhotoModalVisible(true);
             }}
+            size="small"
           >
             Фото
           </Button>
           <Popconfirm
             title="Удалить это помещение?"
             onConfirm={() => handleDelete(record.room_id)}
+            okText="Да"
+            cancelText="Нет"
           >
-            <Button danger icon={<DeleteOutlined />} />
+            <Button danger icon={<DeleteOutlined />} size="small">
+              Удалить
+            </Button>
           </Popconfirm>
         </Space>
       ),
@@ -402,16 +272,20 @@ const RoomsTab = () => {
   ];
 
   return (
-    <div>
+    <div style={{ padding: '24px' }}>
+      <h1>Панель арендодателя - Мои помещения</h1>
+
       <Button
         type="primary"
         icon={<PlusOutlined />}
         onClick={() => {
           setEditingRoom(null);
           form.resetFields();
+          setNewRoomFileList([]);
           setModalVisible(true);
         }}
         style={{ marginBottom: 16 }}
+        size="large"
       >
         Добавить помещение
       </Button>
@@ -421,6 +295,7 @@ const RoomsTab = () => {
         dataSource={rooms}
         rowKey="room_id"
         loading={loading}
+        scroll={{ x: 1000 }}
       />
 
       {/* Room Modal */}
@@ -431,31 +306,18 @@ const RoomsTab = () => {
           setModalVisible(false);
           setEditingRoom(null);
           form.resetFields();
+          setNewRoomFileList([]);
         }}
         footer={null}
-        width={700}
+        width={800}
       >
         <Form form={form} onFinish={handleSubmit} layout="vertical">
           <Form.Item
-            name="building_id"
-            label="Здание"
-            rules={[{ required: true, message: 'Выберите здание!' }]}
-          >
-            <Select placeholder="Выберите здание">
-              {buildings.map((b) => (
-                <Select.Option key={b.building_id} value={b.building_id}>
-                  {b.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item
             name="category_id"
-            label="Категория"
+            label="Категория помещения"
             rules={[{ required: true, message: 'Выберите категорию!' }]}
           >
-            <Select placeholder="Выберите категорию">
+            <Select placeholder="Выберите категорию" size="large">
               {categories.map((c) => (
                 <Select.Option key={c.category_id} value={c.category_id}>
                   {c.name}
@@ -469,29 +331,33 @@ const RoomsTab = () => {
             label="Номер помещения"
             rules={[{ required: true, message: 'Введите номер!' }]}
           >
-            <Input placeholder="Например: 101, 2A, офис 5" />
+            <Input placeholder="Например: 101, 2A, офис 5" size="large" />
           </Form.Item>
 
-          <Form.Item name="floor" label="Этаж">
-            <InputNumber style={{ width: '100%' }} min={1} placeholder="3" />
-          </Form.Item>
-
-          <Form.Item name="area" label="Площадь (м²)">
-            <InputNumber style={{ width: '100%' }} min={1} placeholder="50" />
+          <Form.Item
+            name="area"
+            label="Площадь (м²)"
+            rules={[{ required: true, message: 'Введите площадь!' }]}
+          >
+            <InputNumber style={{ width: '100%' }} min={1} placeholder="50" size="large" />
           </Form.Item>
 
           <Form.Item
             name="price_per_month"
-            label="Цена в месяц ($)"
+            label="Цена в месяц (₽)"
             rules={[{ required: true, message: 'Введите цену!' }]}
           >
-            <InputNumber style={{ width: '100%' }} min={0} placeholder="1000" />
+            <InputNumber style={{ width: '100%' }} min={0} placeholder="50000" size="large" />
+          </Form.Item>
+
+          <Form.Item name="floor" label="Этаж">
+            <InputNumber style={{ width: '100%' }} min={1} placeholder="3" size="large" />
           </Form.Item>
 
           <Form.Item name="status" label="Статус" initialValue="available">
-            <Select>
+            <Select size="large">
               <Select.Option value="available">Доступно</Select.Option>
-              <Select.Option value="occupied">Занято</Select.Option>
+              <Select.Option value="rented">Арендовано</Select.Option>
               <Select.Option value="maintenance">Обслуживание</Select.Option>
             </Select>
           </Form.Item>
@@ -499,6 +365,16 @@ const RoomsTab = () => {
           <Form.Item name="description" label="Описание">
             <Input.TextArea rows={4} placeholder="Опишите помещение..." />
           </Form.Item>
+
+          {!editingRoom && (
+            <Form.Item label="Фотографии (можно добавить позже)">
+              <Upload {...newRoomUploadProps}>
+                <Button icon={<PlusOutlined />} block>
+                  Добавить фото
+                </Button>
+              </Upload>
+            </Form.Item>
+          )}
 
           <Form.Item>
             <Button type="primary" htmlType="submit" block size="large">
@@ -524,7 +400,7 @@ const RoomsTab = () => {
             Загрузить
           </Button>,
         ]}
-        width={700}
+        width={800}
       >
         {selectedRoom && selectedRoom.photos && selectedRoom.photos.length > 0 && (
           <Card title="Текущие фото" style={{ marginBottom: 16 }}>

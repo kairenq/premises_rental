@@ -170,7 +170,7 @@ class RoomPhotoResponse(RoomPhotoBase):
 
 # Room schemas
 class RoomBase(BaseModel):
-    building_id: int
+    building_id: Optional[int] = None
     category_id: int
     room_number: str
     floor: Optional[int] = None

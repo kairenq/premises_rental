@@ -104,7 +104,7 @@ class Room(Base):
     __tablename__ = "rooms"
 
     room_id = Column(Integer, primary_key=True, index=True)
-    building_id = Column(Integer, ForeignKey("buildings.building_id"))
+    building_id = Column(Integer, ForeignKey("buildings.building_id"), nullable=True)
     category_id = Column(Integer, ForeignKey("room_categories.category_id"))
     room_number = Column(String, nullable=False)
     floor = Column(Integer)
