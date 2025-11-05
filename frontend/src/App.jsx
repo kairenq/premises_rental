@@ -9,6 +9,9 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Rooms from './pages/Rooms';
 import AdminPanel from './pages/AdminPanel';
+import MyLeases from './pages/MyLeases';
+import Favorites from './pages/Favorites';
+import Maintenance from './pages/Maintenance';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -70,6 +73,36 @@ const AppRoutes = () => {
           <ProtectedRoute adminOnly>
             <Layout>
               <AdminPanel />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my-leases"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <MyLeases />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/favorites"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Favorites />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/maintenance"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Maintenance />
             </Layout>
           </ProtectedRoute>
         }
