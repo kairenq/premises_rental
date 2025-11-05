@@ -24,11 +24,11 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
-# CORS middleware - Allow both specific origins and Netlify regex
+# CORS middleware
 cors_origins = [
     "http://localhost:3000",
     "http://localhost:5173",
-    "https://premisesrental.netlify.app",  # Конкретный домен Netlify
+    "https://premises-rental.pages.dev",  # Cloudflare Pages
 ]
 
 # Add environment variable if set
@@ -40,7 +40,7 @@ if settings.BACKEND_CORS_ORIGINS:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
-    allow_origin_regex=r"https://.*\.netlify\.app",  # Разрешить все поддомены Netlify
+    allow_origin_regex=r"https://.*\.pages\.dev",  # Все поддомены Cloudflare Pages
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
