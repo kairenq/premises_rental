@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Tabs, Table, Button, Modal, Form, Input, Select, message, Space, Tag, Popconfirm, Card, Row, Col, Statistic, InputNumber } from 'antd';
-import { UserOutlined, HomeOutlined, ShopOutlined, BankOutlined, TagOutlined, PlusOutlined, EditOutlined, DeleteOutlined, BarChartOutlined } from '@ant-design/icons';
-import { usersAPI, buildingsAPI, roomsAPI, companiesAPI, categoriesAPI, statsAPI } from '../services/api';
+import { Tabs, Table, Button, Modal, Form, Input, Select, message, Space, Tag, Popconfirm, Card, Row, Col, Statistic, InputNumber, DatePicker } from 'antd';
+import { UserOutlined, HomeOutlined, ShopOutlined, BankOutlined, TagOutlined, PlusOutlined, EditOutlined, DeleteOutlined, BarChartOutlined, FileTextOutlined, ToolOutlined } from '@ant-design/icons';
+import { usersAPI, buildingsAPI, roomsAPI, companiesAPI, categoriesAPI, statsAPI, leasesAPI, maintenanceAPI } from '../services/api';
+import dayjs from 'dayjs';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -43,6 +44,18 @@ const AdminPanel = () => {
   const [editingCategory, setEditingCategory] = useState(null);
   const [categoryForm] = Form.useForm();
 
+  // Leases
+  const [leases, setLeases] = useState([]);
+  const [leaseModalVisible, setLeaseModalVisible] = useState(false);
+  const [editingLease, setEditingLease] = useState(null);
+  const [leaseForm] = Form.useForm();
+
+  // Maintenance
+  const [maintenance, setMaintenance] = useState([]);
+  const [maintenanceModalVisible, setMaintenanceModalVisible] = useState(false);
+  const [editingMaintenance, setEditingMaintenance] = useState(null);
+  const [maintenanceForm] = Form.useForm();
+
   useEffect(() => {
     fetchStats();
   }, []);
@@ -53,6 +66,8 @@ const AdminPanel = () => {
     else if (activeTab === 'rooms') fetchRooms();
     else if (activeTab === 'companies') fetchCompanies();
     else if (activeTab === 'categories') fetchCategories();
+    else if (activeTab === 'leases') fetchLeases();
+    else if (activeTab === 'maintenance') fetchMaintenance();
   }, [activeTab]);
 
   // === STATS ===
@@ -471,6 +486,147 @@ const AdminPanel = () => {
     }
   ];
 
+  // === LEASES ===
+  const fetchLeases = async () => {
+    setLoading(true);
+    try {
+      const response = await leasesAPI.getAll({});
+      setLeases(response.data);
+    } catch (error) {
+      message.error('Не удалось загрузить аренды');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLeaseDelete = async (leaseId) => {
+    try {
+      await leasesAPI.delete(leaseId);
+      message.success('Аренда удалена');
+      fetchLeases();
+    } catch (error) {
+      message.error('Не удалось удалить аренду');
+    }
+  };
+
+  const leaseColumns = [
+    { title: 'ID', dataIndex: 'lease_id', key: 'lease_id', width: 70 },
+    { title: 'Пользователь', dataIndex: ['user', 'full_name'], key: 'user' },
+    { title: 'Помещение', dataIndex: ['room', 'room_number'], key: 'room' },
+    { title: 'Начало', dataIndex: 'start_date', key: 'start_date', render: (date) => dayjs(date).format('DD.MM.YYYY') },
+    { title: 'Конец', dataIndex: 'end_date', key: 'end_date', render: (date) => dayjs(date).format('DD.MM.YYYY') },
+    { title: 'Аренда/мес', dataIndex: 'monthly_rent', key: 'monthly_rent', render: (rent) => `${rent} ₽` },
+    {
+      title: 'Статус',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status) => {
+        const colors = { active: 'green', completed: 'blue', cancelled: 'red' };
+        const labels = { active: 'Активная', completed: 'Завершена', cancelled: 'Отменена' };
+        return <Tag color={colors[status]}>{labels[status]}</Tag>;
+      }
+    },
+    {
+      title: 'Действия',
+      key: 'actions',
+      render: (_, record) => (
+        <Popconfirm
+          title="Удалить аренду?"
+          onConfirm={() => handleLeaseDelete(record.lease_id)}
+          okText="Да"
+          cancelText="Нет"
+        >
+          <Button icon={<DeleteOutlined />} danger size="small">
+            Удалить
+          </Button>
+        </Popconfirm>
+      )
+    }
+  ];
+
+  // === MAINTENANCE ===
+  const fetchMaintenance = async () => {
+    setLoading(true);
+    try {
+      const response = await maintenanceAPI.getAll({});
+      setMaintenance(response.data);
+    } catch (error) {
+      message.error('Не удалось загрузить заявки на обслуживание');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMaintenanceDelete = async (maintenanceId) => {
+    try {
+      await maintenanceAPI.delete(maintenanceId);
+      message.success('Заявка удалена');
+      fetchMaintenance();
+    } catch (error) {
+      message.error('Не удалось удалить заявку');
+    }
+  };
+
+  const handleMaintenanceStatusChange = async (maintenanceId, newStatus) => {
+    try {
+      await maintenanceAPI.update(maintenanceId, { status: newStatus });
+      message.success('Статус обновлен');
+      fetchMaintenance();
+    } catch (error) {
+      message.error('Не удалось обновить статус');
+    }
+  };
+
+  const maintenanceColumns = [
+    { title: 'ID', dataIndex: 'request_id', key: 'request_id', width: 70 },
+    { title: 'Помещение', dataIndex: ['lease', 'room', 'room_number'], key: 'room' },
+    { title: 'Описание', dataIndex: 'description', key: 'description', ellipsis: true },
+    {
+      title: 'Приоритет',
+      dataIndex: 'priority',
+      key: 'priority',
+      render: (priority) => {
+        const colors = { low: 'green', medium: 'orange', high: 'red' };
+        const labels = { low: 'Низкий', medium: 'Средний', high: 'Высокий' };
+        return <Tag color={colors[priority]}>{labels[priority]}</Tag>;
+      }
+    },
+    {
+      title: 'Статус',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status, record) => (
+        <Select
+          value={status}
+          style={{ width: 140 }}
+          size="small"
+          onChange={(newStatus) => handleMaintenanceStatusChange(record.request_id, newStatus)}
+        >
+          <Option value="pending">Ожидает</Option>
+          <Option value="in_progress">В работе</Option>
+          <Option value="completed">Выполнена</Option>
+        </Select>
+      )
+    },
+    { title: 'Дата', dataIndex: 'request_date', key: 'request_date', render: (date) => dayjs(date).format('DD.MM.YYYY HH:mm') },
+    {
+      title: 'Действия',
+      key: 'actions',
+      render: (_, record) => (
+        <Popconfirm
+          title="Удалить заявку?"
+          onConfirm={() => handleMaintenanceDelete(record.request_id)}
+          okText="Да"
+          cancelText="Нет"
+        >
+          <Button icon={<DeleteOutlined />} danger size="small">
+            Удалить
+          </Button>
+        </Popconfirm>
+      )
+    }
+  ];
+
   return (
     <div style={{ padding: '24px' }}>
       <h1>Панель администратора</h1>
@@ -613,6 +769,28 @@ const AdminPanel = () => {
             dataSource={categories}
             loading={loading}
             rowKey="category_id"
+          />
+        </TabPane>
+
+        {/* LEASES TAB */}
+        <TabPane tab={<span><FileTextOutlined />Аренды</span>} key="leases">
+          <Table
+            columns={leaseColumns}
+            dataSource={leases}
+            loading={loading}
+            rowKey="lease_id"
+            scroll={{ x: 1000 }}
+          />
+        </TabPane>
+
+        {/* MAINTENANCE TAB */}
+        <TabPane tab={<span><ToolOutlined />Обслуживание</span>} key="maintenance">
+          <Table
+            columns={maintenanceColumns}
+            dataSource={maintenance}
+            loading={loading}
+            rowKey="request_id"
+            scroll={{ x: 1000 }}
           />
         </TabPane>
       </Tabs>

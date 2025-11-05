@@ -14,7 +14,7 @@ import {
 } from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
 
-const { Header, Content, Footer } = AntLayout;
+const { Header, Content } = AntLayout;
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -100,13 +100,14 @@ const Layout = ({ children }) => {
       ];
 
   return (
-    <AntLayout style={{ minHeight: '100vh' }}>
+    <AntLayout style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Header
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           background: '#001529',
+          flexShrink: 0,
         }}
       >
         <div style={{ color: 'white', fontSize: '20px', fontWeight: 'bold' }}>
@@ -139,12 +140,9 @@ const Layout = ({ children }) => {
           )}
         </div>
       </Header>
-      <Content style={{ padding: '24px 50px', background: '#f0f2f5' }}>
+      <Content style={{ padding: '24px 50px', background: '#f0f2f5', flex: 1, overflow: 'auto' }}>
         {children}
       </Content>
-      <Footer style={{ textAlign: 'center', background: '#001529', color: 'white' }}>
-        Система аренды помещений © 2025
-      </Footer>
     </AntLayout>
   );
 };
