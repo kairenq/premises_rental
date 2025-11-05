@@ -9,8 +9,6 @@ import {
   LoginOutlined,
   ShopOutlined,
   FileTextOutlined,
-  ToolOutlined,
-  HeartOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -73,16 +71,6 @@ const Layout = ({ children }) => {
                 key: '/my-leases',
                 icon: <FileTextOutlined />,
                 label: <Link to="/my-leases">Мои аренды</Link>,
-              },
-              {
-                key: '/favorites',
-                icon: <HeartOutlined />,
-                label: <Link to="/favorites">Избранное</Link>,
-              },
-              {
-                key: '/maintenance',
-                icon: <ToolOutlined />,
-                label: <Link to="/maintenance">Заявки</Link>,
               },
             ]),
       ]
