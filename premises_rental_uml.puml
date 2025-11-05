@@ -1,0 +1,245 @@
+@startuml premises_rental_system
+!define ENTITY class
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+ENTITY User {
+  - user_id: int <<PK>>
+  - full_name: string
+  - email: string
+  - phone: string
+  - role: enum
+  - password_hash: string
+  - created_at: datetime
+  --
+  + register()
+  + login()
+  + updateProfile()
+  + viewNotifications()
+  + addFavorite()
+  + leaveReview()
+}
+
+ENTITY ActivityLog {
+  - log_id: int <<PK>>
+  - user_id: int <<FK>>
+  - action: string
+  - created_at: datetime
+  --
+  + logActivity()
+  + getHistory()
+}
+
+ENTITY Notification {
+  - notification_id: int <<PK>>
+  - user_id: int <<FK>>
+  - message: string
+  - created_at: datetime
+  - is_read: boolean
+  --
+  + send()
+  + markAsRead()
+  + getUnread()
+}
+
+ENTITY Company {
+  - company_id: int <<PK>>
+  - name: string
+  - tax_id: string
+  - address: string
+  - contact_person: string
+  - phone: string
+  - email: string
+  - description: text
+  --
+  + register()
+  + updateInfo()
+  + addBuilding()
+  + getBuildings()
+}
+
+ENTITY Building {
+  - building_id: int <<PK>>
+  - company_id: int <<FK>>
+  - name: string
+  - address: string
+  - year_built: int
+  - total_area: decimal
+  - description: text
+  --
+  + create()
+  + update()
+  + getRooms()
+  + getAvailableRooms()
+}
+
+ENTITY RoomCategory {
+  - category_id: int <<PK>>
+  - name: string
+  - description: text
+  --
+  + create()
+  + update()
+  + getRoomsByCategory()
+}
+
+ENTITY Room {
+  - room_id: int <<PK>>
+  - building_id: int <<FK>>
+  - category_id: int <<FK>>
+  - room_number: string
+  - floor: int
+  - area: decimal
+  - price_per_month: decimal
+  - status: enum
+  - description: text
+  --
+  + create()
+  + update()
+  + updateStatus()
+  + checkAvailability()
+  + getPhotos()
+  + getReviews()
+}
+
+ENTITY RoomPhoto {
+  - photo_id: int <<PK>>
+  - room_id: int <<FK>>
+  - photo_url: string
+  - description: text
+  --
+  + upload()
+  + delete()
+}
+
+ENTITY Lease {
+  - lease_id: int <<PK>>
+  - room_id: int <<FK>>
+  - tenant_id: int <<FK>>
+  - start_date: date
+  - end_date: date
+  - monthly_rent: decimal
+  - deposit: decimal
+  - status: enum
+  - created_at: datetime
+  --
+  + create()
+  + updateStatus()
+  + calculateTotal()
+  + terminate()
+  + extend()
+}
+
+ENTITY Payment {
+  - payment_id: int <<PK>>
+  - lease_id: int <<FK>>
+  - payment_date: date
+  - amount: decimal
+  - payment_method: enum
+  - status: enum
+  --
+  + process()
+  + refund()
+  + getReceipt()
+}
+
+ENTITY LeaseHistory {
+  - history_id: int <<PK>>
+  - lease_id: int <<FK>>
+  - change_date: datetime
+  - previous_status: enum
+  - new_status: enum
+  - comment: text
+  --
+  + logChange()
+  + getHistory()
+}
+
+ENTITY Review {
+  - review_id: int <<PK>>
+  - user_id: int <<FK>>
+  - room_id: int <<FK>>
+  - rating: int
+  - comment: text
+  - created_at: datetime
+  --
+  + create()
+  + update()
+  + delete()
+  + getAverageRating()
+}
+
+ENTITY Favorite {
+  - favorite_id: int <<PK>>
+  - user_id: int <<FK>>
+  - room_id: int <<FK>>
+  --
+  + add()
+  + remove()
+  + getUserFavorites()
+}
+
+ENTITY MaintenanceRequest {
+  - request_id: int <<PK>>
+  - room_id: int <<FK>>
+  - tenant_id: int <<FK>>
+  - description: text
+  - priority: enum
+  - status: enum
+  - created_at: datetime
+  - resolved_at: datetime
+  --
+  + create()
+  + updateStatus()
+  + assignTechnician()
+  + resolve()
+}
+
+' Relationships
+User "1" -- "0..*" ActivityLog : logs >
+User "1" -- "0..*" Notification : receives >
+User "1" -- "0..*" Review : writes >
+User "1" -- "0..*" Favorite : has >
+User "1" -- "0..*" Lease : tenant >
+User "1" -- "0..*" MaintenanceRequest : submits >
+
+Company "1" -- "0..*" Building : owns >
+
+Building "1" -- "0..*" Room : contains >
+
+RoomCategory "1" -- "0..*" Room : categorizes >
+
+Room "1" -- "0..*" RoomPhoto : has >
+Room "1" -- "0..*" Review : has >
+Room "1" -- "0..*" Favorite : featured in >
+Room "1" -- "0..*" Lease : rented in >
+Room "1" -- "0..*" MaintenanceRequest : has >
+
+Lease "1" -- "0..*" Payment : has >
+Lease "1" -- "0..*" LeaseHistory : tracks >
+
+note right of User
+  Roles: tenant, landlord,
+  admin, manager
+end note
+
+note right of Room
+  Status: available,
+  occupied, maintenance,
+  reserved
+end note
+
+note right of Lease
+  Status: active,
+  expired, terminated,
+  pending
+end note
+
+note right of MaintenanceRequest
+  Priority: low, medium,
+  high, urgent
+  Status: pending, in_progress,
+  completed, cancelled
+end note
+
+@enduml
