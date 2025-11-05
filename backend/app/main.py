@@ -79,3 +79,34 @@ def root():
 def health_check():
     """Health check endpoint."""
     return {"status": "healthy"}
+
+
+@app.post("/api/v1/admin/reset-database")
+async def reset_database():
+    """
+    DANGER: Recreate all database tables (deletes all data!)
+    Use this only when schema changes require database reset.
+    """
+    try:
+        # Drop all tables
+        Base.metadata.drop_all(bind=engine)
+
+        # Recreate all tables
+        Base.metadata.create_all(bind=engine)
+
+        # Re-initialize database with test data
+        db = SessionLocal()
+        try:
+            init_database(db)
+        finally:
+            db.close()
+
+        return {
+            "status": "success",
+            "message": "Database has been reset and reinitialized with test data"
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to reset database: {str(e)}"
+        }
