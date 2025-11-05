@@ -13,6 +13,13 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        print(f"⚙️  Settings loaded:")
+        print(f"   SECRET_KEY: {self.SECRET_KEY[:15]}... (length: {len(self.SECRET_KEY)})")
+        print(f"   ALGORITHM: {self.ALGORITHM}")
+        print(f"   ENVIRONMENT: {self.ENVIRONMENT}")
+
     # Database
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./premises_rental.db")
 

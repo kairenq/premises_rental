@@ -26,14 +26,24 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
         expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
     to_encode.update({"exp": expire})
+    print(f"🔐 Creating token with SECRET_KEY: {settings.SECRET_KEY[:10]}... (algorithm: {settings.ALGORITHM})")
+    print(f"📝 Token data: {to_encode}")
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    print(f"✅ Token created: {encoded_jwt[:30]}...")
     return encoded_jwt
 
 
 def decode_access_token(token: str) -> Optional[dict]:
     """Decode a JWT access token."""
     try:
+        print(f"🔓 Decoding token with SECRET_KEY: {settings.SECRET_KEY[:10]}... (algorithm: {settings.ALGORITHM})")
+        print(f"📝 Token to decode: {token[:30]}...")
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        print(f"✅ Decoded successfully: {payload}")
         return payload
-    except JWTError:
+    except JWTError as e:
+        print(f"❌ JWT Decode Error: {e}")
+        return None
+    except Exception as e:
+        print(f"❌ Unexpected decode error: {e}")
         return None
