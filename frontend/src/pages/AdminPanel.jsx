@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Tabs, Table, Button, Modal, Form, Input, Select, message, Space, Tag, Popconfirm, Card, Row, Col, Statistic, InputNumber, DatePicker } from 'antd';
-import { UserOutlined, HomeOutlined, ShopOutlined, BankOutlined, TagOutlined, PlusOutlined, EditOutlined, DeleteOutlined, BarChartOutlined, FileTextOutlined, ToolOutlined } from '@ant-design/icons';
-import { usersAPI, buildingsAPI, roomsAPI, companiesAPI, categoriesAPI, statsAPI, leasesAPI, maintenanceAPI } from '../services/api';
-import dayjs from 'dayjs';
+import { Tabs, Table, Button, Modal, Form, Input, Select, message, Space, Tag, Popconfirm, Card, Row, Col, Statistic, InputNumber } from 'antd';
+import { UserOutlined, HomeOutlined, ShopOutlined, BankOutlined, TagOutlined, PlusOutlined, EditOutlined, DeleteOutlined, BarChartOutlined } from '@ant-design/icons';
+import { roomsAPI, companiesAPI, categoriesAPI, statsAPI, buildingsAPI } from '../services/api';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -14,17 +13,8 @@ const AdminPanel = () => {
   // Stats
   const [stats, setStats] = useState({});
 
-  // Users
-  const [users, setUsers] = useState([]);
-  const [userModalVisible, setUserModalVisible] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
-  const [userForm] = Form.useForm();
-
-  // Buildings
+  // Buildings (for dropdowns only)
   const [buildings, setBuildings] = useState([]);
-  const [buildingModalVisible, setBuildingModalVisible] = useState(false);
-  const [editingBuilding, setEditingBuilding] = useState(null);
-  const [buildingForm] = Form.useForm();
 
   // Rooms
   const [rooms, setRooms] = useState([]);
@@ -44,30 +34,14 @@ const AdminPanel = () => {
   const [editingCategory, setEditingCategory] = useState(null);
   const [categoryForm] = Form.useForm();
 
-  // Leases
-  const [leases, setLeases] = useState([]);
-  const [leaseModalVisible, setLeaseModalVisible] = useState(false);
-  const [editingLease, setEditingLease] = useState(null);
-  const [leaseForm] = Form.useForm();
-
-  // Maintenance
-  const [maintenance, setMaintenance] = useState([]);
-  const [maintenanceModalVisible, setMaintenanceModalVisible] = useState(false);
-  const [editingMaintenance, setEditingMaintenance] = useState(null);
-  const [maintenanceForm] = Form.useForm();
-
   useEffect(() => {
     fetchStats();
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'users') fetchUsers();
-    else if (activeTab === 'buildings') fetchBuildings();
-    else if (activeTab === 'rooms') fetchRooms();
+    if (activeTab === 'rooms') fetchRooms();
     else if (activeTab === 'companies') fetchCompanies();
     else if (activeTab === 'categories') fetchCategories();
-    else if (activeTab === 'leases') fetchLeases();
-    else if (activeTab === 'maintenance') fetchMaintenance();
   }, [activeTab]);
 
   // === STATS ===
@@ -79,166 +53,6 @@ const AdminPanel = () => {
       message.error('Не удалось загрузить статистику');
     }
   };
-
-  // === USERS ===
-  const fetchUsers = async () => {
-    setLoading(true);
-    try {
-      const response = await usersAPI.getAll();
-      setUsers(response.data);
-    } catch (error) {
-      message.error('Не удалось загрузить пользователей');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUserEdit = (user) => {
-    setEditingUser(user);
-    userForm.setFieldsValue(user);
-    setUserModalVisible(true);
-  };
-
-  const handleUserDelete = async (userId) => {
-    try {
-      await usersAPI.delete(userId);
-      message.success('Пользователь удален');
-      fetchUsers();
-    } catch (error) {
-      message.error('Не удалось удалить пользователя');
-    }
-  };
-
-  const handleUserSubmit = async (values) => {
-    try {
-      if (editingUser) {
-        await usersAPI.update(editingUser.user_id, values);
-        message.success('Пользователь обновлен');
-      } else {
-        await usersAPI.create(values);
-        message.success('Пользователь создан');
-      }
-      setUserModalVisible(false);
-      setEditingUser(null);
-      userForm.resetFields();
-      fetchUsers();
-    } catch (error) {
-      message.error('Не удалось сохранить пользователя');
-    }
-  };
-
-  const userColumns = [
-    { title: 'ID', dataIndex: 'user_id', key: 'user_id', width: 70 },
-    { title: 'ФИО', dataIndex: 'full_name', key: 'full_name' },
-    { title: 'Email', dataIndex: 'email', key: 'email' },
-    { title: 'Телефон', dataIndex: 'phone', key: 'phone' },
-    {
-      title: 'Роль',
-      dataIndex: 'role',
-      key: 'role',
-      render: (role) => {
-        const colors = { admin: 'red', landlord: 'blue', user: 'green' };
-        const labels = { admin: 'Админ', landlord: 'Арендодатель', user: 'Пользователь' };
-        return <Tag color={colors[role]}>{labels[role]}</Tag>;
-      }
-    },
-    {
-      title: 'Действия',
-      key: 'actions',
-      render: (_, record) => (
-        <Space>
-          <Button icon={<EditOutlined />} onClick={() => handleUserEdit(record)} size="small">
-            Изменить
-          </Button>
-          <Popconfirm
-            title="Удалить пользователя?"
-            onConfirm={() => handleUserDelete(record.user_id)}
-            okText="Да"
-            cancelText="Нет"
-          >
-            <Button icon={<DeleteOutlined />} danger size="small">
-              Удалить
-            </Button>
-          </Popconfirm>
-        </Space>
-      )
-    }
-  ];
-
-  // === BUILDINGS ===
-  const fetchBuildings = async () => {
-    setLoading(true);
-    try {
-      const response = await buildingsAPI.getAll({});
-      setBuildings(response.data);
-    } catch (error) {
-      message.error('Не удалось загрузить здания');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleBuildingEdit = (building) => {
-    setEditingBuilding(building);
-    buildingForm.setFieldsValue(building);
-    setBuildingModalVisible(true);
-  };
-
-  const handleBuildingDelete = async (buildingId) => {
-    try {
-      await buildingsAPI.delete(buildingId);
-      message.success('Здание удалено');
-      fetchBuildings();
-    } catch (error) {
-      message.error('Не удалось удалить здание');
-    }
-  };
-
-  const handleBuildingSubmit = async (values) => {
-    try {
-      if (editingBuilding) {
-        await buildingsAPI.update(editingBuilding.building_id, values);
-        message.success('Здание обновлено');
-      } else {
-        await buildingsAPI.create(values);
-        message.success('Здание создано');
-      }
-      setBuildingModalVisible(false);
-      setEditingBuilding(null);
-      buildingForm.resetFields();
-      fetchBuildings();
-    } catch (error) {
-      message.error('Не удалось сохранить здание');
-    }
-  };
-
-  const buildingColumns = [
-    { title: 'ID', dataIndex: 'building_id', key: 'building_id', width: 70 },
-    { title: 'Название', dataIndex: 'name', key: 'name' },
-    { title: 'Адрес', dataIndex: 'address', key: 'address' },
-    { title: 'Этажи', dataIndex: 'floors', key: 'floors', width: 80 },
-    {
-      title: 'Действия',
-      key: 'actions',
-      render: (_, record) => (
-        <Space>
-          <Button icon={<EditOutlined />} onClick={() => handleBuildingEdit(record)} size="small">
-            Изменить
-          </Button>
-          <Popconfirm
-            title="Удалить здание?"
-            onConfirm={() => handleBuildingDelete(record.building_id)}
-            okText="Да"
-            cancelText="Нет"
-          >
-            <Button icon={<DeleteOutlined />} danger size="small">
-              Удалить
-            </Button>
-          </Popconfirm>
-        </Space>
-      )
-    }
-  ];
 
   // === ROOMS ===
   const fetchRooms = async () => {
@@ -486,147 +300,6 @@ const AdminPanel = () => {
     }
   ];
 
-  // === LEASES ===
-  const fetchLeases = async () => {
-    setLoading(true);
-    try {
-      const response = await leasesAPI.getAll({});
-      setLeases(response.data);
-    } catch (error) {
-      message.error('Не удалось загрузить аренды');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLeaseDelete = async (leaseId) => {
-    try {
-      await leasesAPI.delete(leaseId);
-      message.success('Аренда удалена');
-      fetchLeases();
-    } catch (error) {
-      message.error('Не удалось удалить аренду');
-    }
-  };
-
-  const leaseColumns = [
-    { title: 'ID', dataIndex: 'lease_id', key: 'lease_id', width: 70 },
-    { title: 'Пользователь', dataIndex: ['user', 'full_name'], key: 'user' },
-    { title: 'Помещение', dataIndex: ['room', 'room_number'], key: 'room' },
-    { title: 'Начало', dataIndex: 'start_date', key: 'start_date', render: (date) => dayjs(date).format('DD.MM.YYYY') },
-    { title: 'Конец', dataIndex: 'end_date', key: 'end_date', render: (date) => dayjs(date).format('DD.MM.YYYY') },
-    { title: 'Аренда/мес', dataIndex: 'monthly_rent', key: 'monthly_rent', render: (rent) => `${rent} ₽` },
-    {
-      title: 'Статус',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => {
-        const colors = { active: 'green', completed: 'blue', cancelled: 'red' };
-        const labels = { active: 'Активная', completed: 'Завершена', cancelled: 'Отменена' };
-        return <Tag color={colors[status]}>{labels[status]}</Tag>;
-      }
-    },
-    {
-      title: 'Действия',
-      key: 'actions',
-      render: (_, record) => (
-        <Popconfirm
-          title="Удалить аренду?"
-          onConfirm={() => handleLeaseDelete(record.lease_id)}
-          okText="Да"
-          cancelText="Нет"
-        >
-          <Button icon={<DeleteOutlined />} danger size="small">
-            Удалить
-          </Button>
-        </Popconfirm>
-      )
-    }
-  ];
-
-  // === MAINTENANCE ===
-  const fetchMaintenance = async () => {
-    setLoading(true);
-    try {
-      const response = await maintenanceAPI.getAll({});
-      setMaintenance(response.data);
-    } catch (error) {
-      message.error('Не удалось загрузить заявки на обслуживание');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleMaintenanceDelete = async (maintenanceId) => {
-    try {
-      await maintenanceAPI.delete(maintenanceId);
-      message.success('Заявка удалена');
-      fetchMaintenance();
-    } catch (error) {
-      message.error('Не удалось удалить заявку');
-    }
-  };
-
-  const handleMaintenanceStatusChange = async (maintenanceId, newStatus) => {
-    try {
-      await maintenanceAPI.update(maintenanceId, { status: newStatus });
-      message.success('Статус обновлен');
-      fetchMaintenance();
-    } catch (error) {
-      message.error('Не удалось обновить статус');
-    }
-  };
-
-  const maintenanceColumns = [
-    { title: 'ID', dataIndex: 'request_id', key: 'request_id', width: 70 },
-    { title: 'Помещение', dataIndex: ['lease', 'room', 'room_number'], key: 'room' },
-    { title: 'Описание', dataIndex: 'description', key: 'description', ellipsis: true },
-    {
-      title: 'Приоритет',
-      dataIndex: 'priority',
-      key: 'priority',
-      render: (priority) => {
-        const colors = { low: 'green', medium: 'orange', high: 'red' };
-        const labels = { low: 'Низкий', medium: 'Средний', high: 'Высокий' };
-        return <Tag color={colors[priority]}>{labels[priority]}</Tag>;
-      }
-    },
-    {
-      title: 'Статус',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status, record) => (
-        <Select
-          value={status}
-          style={{ width: 140 }}
-          size="small"
-          onChange={(newStatus) => handleMaintenanceStatusChange(record.request_id, newStatus)}
-        >
-          <Option value="pending">Ожидает</Option>
-          <Option value="in_progress">В работе</Option>
-          <Option value="completed">Выполнена</Option>
-        </Select>
-      )
-    },
-    { title: 'Дата', dataIndex: 'request_date', key: 'request_date', render: (date) => dayjs(date).format('DD.MM.YYYY HH:mm') },
-    {
-      title: 'Действия',
-      key: 'actions',
-      render: (_, record) => (
-        <Popconfirm
-          title="Удалить заявку?"
-          onConfirm={() => handleMaintenanceDelete(record.request_id)}
-          okText="Да"
-          cancelText="Нет"
-        >
-          <Button icon={<DeleteOutlined />} danger size="small">
-            Удалить
-          </Button>
-        </Popconfirm>
-      )
-    }
-  ];
-
   return (
     <div style={{ padding: '24px' }}>
       <h1>Панель администратора</h1>
@@ -656,52 +329,6 @@ const AdminPanel = () => {
               </Card>
             </Col>
           </Row>
-        </TabPane>
-
-        {/* USERS TAB */}
-        <TabPane tab={<span><UserOutlined />Пользователи</span>} key="users">
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => {
-              setEditingUser(null);
-              userForm.resetFields();
-              setUserModalVisible(true);
-            }}
-            style={{ marginBottom: 16 }}
-          >
-            Добавить пользователя
-          </Button>
-          <Table
-            columns={userColumns}
-            dataSource={users}
-            loading={loading}
-            rowKey="user_id"
-            scroll={{ x: 800 }}
-          />
-        </TabPane>
-
-        {/* BUILDINGS TAB */}
-        <TabPane tab={<span><BankOutlined />Здания</span>} key="buildings">
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => {
-              setEditingBuilding(null);
-              buildingForm.resetFields();
-              setBuildingModalVisible(true);
-            }}
-            style={{ marginBottom: 16 }}
-          >
-            Добавить здание
-          </Button>
-          <Table
-            columns={buildingColumns}
-            dataSource={buildings}
-            loading={loading}
-            rowKey="building_id"
-            scroll={{ x: 800 }}
-          />
         </TabPane>
 
         {/* ROOMS TAB */}
@@ -771,92 +398,7 @@ const AdminPanel = () => {
             rowKey="category_id"
           />
         </TabPane>
-
-        {/* LEASES TAB */}
-        <TabPane tab={<span><FileTextOutlined />Аренды</span>} key="leases">
-          <Table
-            columns={leaseColumns}
-            dataSource={leases}
-            loading={loading}
-            rowKey="lease_id"
-            scroll={{ x: 1000 }}
-          />
-        </TabPane>
-
-        {/* MAINTENANCE TAB */}
-        <TabPane tab={<span><ToolOutlined />Обслуживание</span>} key="maintenance">
-          <Table
-            columns={maintenanceColumns}
-            dataSource={maintenance}
-            loading={loading}
-            rowKey="request_id"
-            scroll={{ x: 1000 }}
-          />
-        </TabPane>
       </Tabs>
-
-      {/* USER MODAL */}
-      <Modal
-        title={editingUser ? 'Редактировать пользователя' : 'Добавить пользователя'}
-        open={userModalVisible}
-        onCancel={() => {
-          setUserModalVisible(false);
-          setEditingUser(null);
-          userForm.resetFields();
-        }}
-        onOk={() => userForm.submit()}
-      >
-        <Form form={userForm} onFinish={handleUserSubmit} layout="vertical">
-          <Form.Item name="full_name" label="ФИО" rules={[{ required: true, message: 'Введите ФИО' }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email', message: 'Введите корректный email' }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item name="phone" label="Телефон">
-            <Input />
-          </Form.Item>
-          <Form.Item name="role" label="Роль" rules={[{ required: true, message: 'Выберите роль' }]}>
-            <Select>
-              <Option value="admin">Администратор</Option>
-              <Option value="landlord">Арендодатель</Option>
-              <Option value="user">Пользователь</Option>
-            </Select>
-          </Form.Item>
-          {!editingUser && (
-            <Form.Item name="password" label="Пароль" rules={[{ required: true, message: 'Введите пароль' }]}>
-              <Input.Password />
-            </Form.Item>
-          )}
-        </Form>
-      </Modal>
-
-      {/* BUILDING MODAL */}
-      <Modal
-        title={editingBuilding ? 'Редактировать здание' : 'Добавить здание'}
-        open={buildingModalVisible}
-        onCancel={() => {
-          setBuildingModalVisible(false);
-          setEditingBuilding(null);
-          buildingForm.resetFields();
-        }}
-        onOk={() => buildingForm.submit()}
-      >
-        <Form form={buildingForm} onFinish={handleBuildingSubmit} layout="vertical">
-          <Form.Item name="name" label="Название" rules={[{ required: true, message: 'Введите название' }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item name="address" label="Адрес" rules={[{ required: true, message: 'Введите адрес' }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item name="floors" label="Количество этажей" rules={[{ required: true, message: 'Введите количество этажей' }]}>
-            <InputNumber style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="description" label="Описание">
-            <Input.TextArea rows={3} />
-          </Form.Item>
-        </Form>
-      </Modal>
 
       {/* ROOM MODAL */}
       <Modal
