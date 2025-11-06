@@ -76,9 +76,10 @@ def root():
 
 
 @app.get("/health")
+@app.head("/health")
 def health_check():
-    """Health check endpoint."""
-    return {"status": "healthy"}
+    """Health check endpoint for uptime monitoring (supports GET and HEAD)."""
+    return {"status": "ok"}
 
 
 @app.post("/api/v1/admin/reset-database")
