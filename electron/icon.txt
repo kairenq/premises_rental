@@ -1,0 +1,14 @@
+ВАЖНО: Для финальной сборки нужна иконка!
+
+1. Создайте/скачайте иконку приложения в формате PNG (256x256 или 512x512)
+2. Конвертируйте в .ico формат:
+   - Онлайн: https://convertio.co/png-ico/
+   - Или используйте ImageMagick: convert icon.png -define icon:auto-resize=256,128,96,64,48,32,16 icon.ico
+3. Сохраните как electron/icon.ico
+
+Пока icon.ico отсутствует, будет использоваться стандартная иконка Electron.
+
+Рекомендуемые размеры:
+- Windows: 256x256px (ico)
+- Linux: 512x512px (png)
+- macOS: 512x512px (icns)
