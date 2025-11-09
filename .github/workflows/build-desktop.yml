@@ -1,0 +1,151 @@
+name: Build Desktop Application
+
+on:
+  push:
+    branches: [ main, master, claude/* ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Позволяет запускать вручную
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Setup Node.js 18
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: '**/package.json'
+
+    # ===== BACKEND BUILD =====
+    - name: Install Python dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+        pip install -r requirements.txt
+
+    - name: Build Backend with PyInstaller
+      run: |
+        cd backend
+        pyinstaller premises_rental.spec --clean --noconfirm
+
+    - name: Verify Backend Build
+      run: |
+        if (Test-Path "backend\dist\premises_rental_backend.exe") {
+          Write-Host "✅ Backend exe created successfully!"
+          Get-Item "backend\dist\premises_rental_backend.exe" | Select-Object Name, Length
+        } else {
+          Write-Error "❌ Backend exe not found!"
+          exit 1
+        }
+      shell: pwsh
+
+    # ===== FRONTEND BUILD =====
+    - name: Install Frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Build Frontend
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Verify Frontend Build
+      run: |
+        if (Test-Path "frontend\dist\index.html") {
+          Write-Host "✅ Frontend built successfully!"
+        } else {
+          Write-Error "❌ Frontend build failed!"
+          exit 1
+        }
+      shell: pwsh
+
+    # ===== ELECTRON PREPARATION =====
+    - name: Prepare Electron files
+      run: |
+        cd electron
+
+        # Create directories
+        New-Item -ItemType Directory -Force -Path backend-exe
+        New-Item -ItemType Directory -Force -Path frontend-dist
+
+        # Copy backend exe
+        Copy-Item -Path "..\backend\dist\premises_rental_backend.exe" -Destination "backend-exe\" -Force
+
+        # Copy uploads folder if exists
+        if (Test-Path "..\backend\uploads") {
+          Copy-Item -Path "..\backend\uploads" -Destination "backend-exe\" -Recurse -Force
+        }
+
+        # Copy frontend dist
+        Copy-Item -Path "..\frontend\dist\*" -Destination "frontend-dist\" -Recurse -Force
+
+        Write-Host "✅ Files prepared for Electron"
+      shell: pwsh
+
+    - name: Install Electron dependencies
+      run: |
+        cd electron
+        npm ci
+
+    # ===== ELECTRON BUILD =====
+    - name: Build Electron Application
+      run: |
+        cd electron
+        npm run build
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Verify Electron Build
+      run: |
+        $installerPath = Get-ChildItem -Path "electron\dist" -Filter "*.exe" -Recurse | Select-Object -First 1
+        if ($installerPath) {
+          Write-Host "✅ Electron installer created: $($installerPath.Name)"
+          Write-Host "   Size: $([math]::Round($installerPath.Length / 1MB, 2)) MB"
+          Write-Host "   Path: $($installerPath.FullName)"
+        } else {
+          Write-Error "❌ Electron installer not found!"
+          exit 1
+        }
+      shell: pwsh
+
+    # ===== UPLOAD ARTIFACTS =====
+    - name: Upload Installer
+      uses: actions/upload-artifact@v4
+      with:
+        name: Premises-Rental-Windows-Installer
+        path: electron/dist/*.exe
+        retention-days: 30
+
+    - name: Upload Portable Version
+      uses: actions/upload-artifact@v4
+      with:
+        name: Premises-Rental-Windows-Portable
+        path: electron/dist/win-unpacked/
+        retention-days: 30
+
+    # ===== CREATE RELEASE (only on tags) =====
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          electron/dist/*.exe
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
