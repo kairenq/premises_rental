@@ -15,91 +15,17 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup Python 3.11
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-        cache: 'pip'
-
     - name: Setup Node.js 18
       uses: actions/setup-node@v4
       with:
         node-version: '18'
 
-    # ===== BACKEND BUILD =====
-    - name: Install Python dependencies
-      run: |
-        cd backend
-        python -m pip install --upgrade pip
-        pip install pyinstaller
-        pip install -r requirements.txt
-
-    - name: Build Backend with PyInstaller
-      run: |
-        cd backend
-        pyinstaller premises_rental.spec --clean --noconfirm
-
-    - name: Verify Backend Build
-      run: |
-        if (Test-Path "backend\dist\premises_rental_backend.exe") {
-          Write-Host "✅ Backend exe created successfully!"
-          Get-Item "backend\dist\premises_rental_backend.exe" | Select-Object Name, Length
-        } else {
-          Write-Error "❌ Backend exe not found!"
-          exit 1
-        }
-      shell: pwsh
-
-    # ===== FRONTEND BUILD =====
-    - name: Install Frontend dependencies
-      run: |
-        cd frontend
-        npm install
-
-    - name: Build Frontend
-      run: |
-        cd frontend
-        npm run build
-
-    - name: Verify Frontend Build
-      run: |
-        if (Test-Path "frontend\dist\index.html") {
-          Write-Host "✅ Frontend built successfully!"
-        } else {
-          Write-Error "❌ Frontend build failed!"
-          exit 1
-        }
-      shell: pwsh
-
-    # ===== ELECTRON PREPARATION =====
-    - name: Prepare Electron files
-      run: |
-        cd electron
-
-        # Create directories
-        New-Item -ItemType Directory -Force -Path backend-exe
-        New-Item -ItemType Directory -Force -Path frontend-dist
-
-        # Copy backend exe
-        Copy-Item -Path "..\backend\dist\premises_rental_backend.exe" -Destination "backend-exe\" -Force
-
-        # Copy uploads folder if exists
-        if (Test-Path "..\backend\uploads") {
-          Copy-Item -Path "..\backend\uploads" -Destination "backend-exe\" -Recurse -Force
-        }
-
-        # Copy frontend dist
-        Copy-Item -Path "..\frontend\dist\*" -Destination "frontend-dist\" -Recurse -Force
-
-        Write-Host "✅ Files prepared for Electron"
-      shell: pwsh
-
+    # ===== ELECTRON BUILD =====
     - name: Install Electron dependencies
       run: |
         cd electron
         npm install
 
-    # ===== ELECTRON BUILD =====
     - name: Build Electron Application
       run: |
         cd electron

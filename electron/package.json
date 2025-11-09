@@ -19,9 +19,7 @@
     "electron": "^28.0.0",
     "electron-builder": "^24.9.1"
   },
-  "dependencies": {
-    "axios": "^1.6.0"
-  },
+  "dependencies": {},
   "build": {
     "appId": "com.premises.rental",
     "productName": "Premises Rental System",
@@ -32,8 +30,6 @@
     "files": [
       "main.js",
       "preload.js",
-      "backend-exe/**/*",
-      "frontend-dist/**/*",
       "icon.ico"
     ],
     "win": {
@@ -60,16 +56,6 @@
     "mac": {
       "target": ["dmg"],
       "category": "public.app-category.business"
-    },
-    "extraResources": [
-      {
-        "from": "backend-exe",
-        "to": "backend-exe"
-      },
-      {
-        "from": "frontend-dist",
-        "to": "frontend-dist"
-      }
-    ]
+    }
   }
 }

@@ -1,98 +1,10 @@
 const { app, BrowserWindow, Menu } = require('electron');
 const path = require('path');
-const { spawn } = require('child_process');
-const axios = require('axios');
 
 let mainWindow;
-let backendProcess;
-const BACKEND_PORT = 8000;
-const BACKEND_URL = `http://127.0.0.1:${BACKEND_PORT}`;
 
-// Определяем пути в зависимости от окружения
-const isDev = !app.isPackaged;
-const resourcesPath = isDev
-  ? path.join(__dirname, '..')
-  : process.resourcesPath;
-
-const backendPath = isDev
-  ? path.join(resourcesPath, 'backend')
-  : path.join(resourcesPath, 'backend-exe');
-
-const frontendPath = isDev
-  ? path.join(resourcesPath, 'frontend', 'dist')
-  : path.join(resourcesPath, 'frontend-dist');
-
-// Функция запуска backend
-function startBackend() {
-  return new Promise((resolve, reject) => {
-    console.log('Starting backend...');
-    console.log('Backend path:', backendPath);
-
-    let backendExecutable;
-
-    if (isDev) {
-      // В режиме разработки запускаем через uvicorn
-      backendExecutable = 'python';
-      const uvicornPath = path.join(backendPath, 'app', 'main.py');
-
-      backendProcess = spawn('uvicorn', [
-        'app.main:app',
-        '--host', '127.0.0.1',
-        '--port', BACKEND_PORT.toString(),
-        '--log-level', 'info'
-      ], {
-        cwd: backendPath,
-        shell: true,
-        stdio: 'inherit'
-      });
-    } else {
-      // В production запускаем exe файл
-      backendExecutable = path.join(backendPath, 'premises_rental_backend.exe');
-
-      backendProcess = spawn(backendExecutable, [], {
-        cwd: backendPath,
-        stdio: 'inherit'
-      });
-    }
-
-    backendProcess.on('error', (err) => {
-      console.error('Failed to start backend:', err);
-      reject(err);
-    });
-
-    // Ждем пока backend запустится
-    let attempts = 0;
-    const maxAttempts = 30;
-
-    const checkBackend = setInterval(async () => {
-      attempts++;
-
-      try {
-        const response = await axios.get(`${BACKEND_URL}/health`, { timeout: 1000 });
-        if (response.status === 200) {
-          console.log('Backend is ready!');
-          clearInterval(checkBackend);
-          resolve();
-        }
-      } catch (error) {
-        if (attempts >= maxAttempts) {
-          console.error('Backend failed to start after', maxAttempts, 'attempts');
-          clearInterval(checkBackend);
-          reject(new Error('Backend startup timeout'));
-        }
-      }
-    }, 1000);
-  });
-}
-
-// Функция остановки backend
-function stopBackend() {
-  if (backendProcess) {
-    console.log('Stopping backend...');
-    backendProcess.kill();
-    backendProcess = null;
-  }
-}
+// URL backend на Render
+const BACKEND_URL = 'https://premises-rental.onrender.com';
 
 // Создание главного окна
 function createWindow() {
@@ -105,60 +17,93 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
+      webviewTag: false
     },
     show: false, // Не показываем пока не загрузится
-    backgroundColor: '#f0f2f5'
+    backgroundColor: '#f0f2f5',
+    autoHideMenuBar: true, // Скрываем меню автоматически
+    title: 'Premises Rental System'
   });
 
-  // Убираем меню (опционально)
+  // Убираем меню полностью
   Menu.setApplicationMenu(null);
 
-  // Загружаем приложение
-  const indexPath = path.join(frontendPath, 'index.html');
-  console.log('Loading frontend from:', indexPath);
-
-  mainWindow.loadFile(indexPath).catch(err => {
-    console.error('Failed to load frontend:', err);
-    // Fallback на backend URL
-    mainWindow.loadURL(BACKEND_URL);
-  });
+  // Загружаем приложение с Render
+  console.log('Loading application from:', BACKEND_URL);
+  mainWindow.loadURL(BACKEND_URL);
 
   // Показываем окно когда готово
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
-
-    // Открываем DevTools в режиме разработки
-    if (isDev) {
-      mainWindow.webContents.openDevTools();
-    }
+    console.log('Application loaded successfully!');
   });
 
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
 
-  // Обработка внешних ссылок
+  // Обработка внешних ссылок - открываем в браузере
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     require('electron').shell.openExternal(url);
     return { action: 'deny' };
   });
+
+  // Обработка ошибок загрузки
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.error('Failed to load:', errorCode, errorDescription);
+
+    // Показываем простую страницу с ошибкой
+    mainWindow.loadURL(`data:text/html;charset=utf-8,
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 100vh;
+              margin: 0;
+              background: #f0f2f5;
+            }
+            .error {
+              text-align: center;
+              padding: 40px;
+              background: white;
+              border-radius: 8px;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }
+            h1 { color: #ff4d4f; margin-bottom: 16px; }
+            p { color: #595959; margin-bottom: 24px; }
+            button {
+              background: #1890ff;
+              color: white;
+              border: none;
+              padding: 10px 24px;
+              border-radius: 4px;
+              cursor: pointer;
+              font-size: 14px;
+            }
+            button:hover { background: #40a9ff; }
+          </style>
+        </head>
+        <body>
+          <div class="error">
+            <h1>⚠️ Не удалось подключиться</h1>
+            <p>Проверьте интернет-соединение и попробуйте снова</p>
+            <button onclick="location.reload()">Повторить попытку</button>
+          </div>
+        </body>
+      </html>
+    `);
+  });
 }
 
 // Инициализация приложения
-app.whenReady().then(async () => {
-  try {
-    // Запускаем backend
-    await startBackend();
-
-    // Создаем окно
-    createWindow();
-
-    console.log('Application started successfully!');
-  } catch (error) {
-    console.error('Failed to start application:', error);
-    app.quit();
-  }
+app.whenReady().then(() => {
+  createWindow();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -169,22 +114,7 @@ app.whenReady().then(async () => {
 
 // Закрытие приложения
 app.on('window-all-closed', () => {
-  stopBackend();
   if (process.platform !== 'darwin') {
     app.quit();
   }
-});
-
-app.on('before-quit', () => {
-  stopBackend();
-});
-
-// Обработка ошибок
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught exception:', error);
-  stopBackend();
-});
-
-process.on('unhandledRejection', (error) => {
-  console.error('Unhandled rejection:', error);
 });
