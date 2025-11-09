@@ -26,9 +26,26 @@ echo.
 REM Step 2: Build Backend with PyInstaller
 echo [2/4] Building backend executable...
 cd ..\backend
-pip install pyinstaller
-pip install -r requirements.txt
-pyinstaller premises_rental.spec --clean --noconfirm
+
+REM Используем python -m pip вместо просто pip
+echo Installing PyInstaller...
+python -m pip install pyinstaller
+if %ERRORLEVEL% NEQ 0 (
+    echo ERROR: Failed to install PyInstaller!
+    pause
+    exit /b 1
+)
+
+echo Installing backend dependencies...
+python -m pip install -r requirements.txt
+if %ERRORLEVEL% NEQ 0 (
+    echo ERROR: Failed to install dependencies!
+    pause
+    exit /b 1
+)
+
+echo Building backend executable...
+python -m PyInstaller premises_rental.spec --clean --noconfirm
 if %ERRORLEVEL% NEQ 0 (
     echo ERROR: Backend build failed!
     pause
