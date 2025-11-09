@@ -70,5 +70,4 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='../electron/icon.ico' if sys.platform == 'win32' else None,
 )
