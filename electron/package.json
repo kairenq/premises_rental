@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "Premises Rental System - Desktop Application",
   "main": "main.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kairenq/premises_rental.git"
+  },
   "scripts": {
     "start": "electron .",
     "build": "electron-builder --win --x64",
@@ -21,6 +25,7 @@
   "build": {
     "appId": "com.premises.rental",
     "productName": "Premises Rental System",
+    "publish": null,
     "directories": {
       "output": "dist"
     },
