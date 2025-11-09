@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Database ER Diagram - Premises Rental System</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .info {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        #diagram {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        .legend {
+            background: #e3f2fd;
+            padding: 10px;
+            border-left: 4px solid #2196f3;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🗄️ Database ER Diagram</h1>
+    <h2 style="text-align: center; color: #666;">Premises Rental System</h2>
+
+    <div class="info">
+        <h3>📊 Структура базы данных:</h3>
+        <ul>
+            <li><strong>14 таблиц</strong> с полными связями</li>
+            <li><strong>Пользователи (users)</strong>: admin, landlord, user</li>
+            <li><strong>Помещения (rooms)</strong>: с категориями, фото, отзывами</li>
+            <li><strong>Аренда (leases)</strong>: договоры, платежи, история</li>
+            <li><strong>Компании и здания</strong>: структура собственности</li>
+            <li><strong>Обслуживание</strong>: заявки, уведомления, логи</li>
+        </ul>
+    </div>
+
+    <div id="diagram">
+        <div class="mermaid">
+erDiagram
+    users ||--o{ activity_log : "создает"
+    users ||--o{ notifications : "получает"
+    users ||--o{ reviews : "пишет"
+    users ||--o{ favorites : "добавляет"
+    users ||--o{ leases : "арендует"
+    users ||--o{ maintenance_requests : "создает"
+
+    companies ||--o{ buildings : "владеет"
+
+    buildings ||--o{ rooms : "содержит"
+
+    room_categories ||--o{ rooms : "классифицирует"
+
+    rooms ||--o{ room_photos : "имеет"
+    rooms ||--o{ reviews : "оценивается"
+    rooms ||--o{ favorites : "добавляется_в"
+    rooms ||--o{ leases : "сдается"
+    rooms ||--o{ maintenance_requests : "обслуживается"
+
+    leases ||--o{ payments : "оплачивается"
+    leases ||--o{ lease_history : "история"
+
+    users {
+        int user_id PK
+        string full_name
+        string email UK
+        string phone
+        string role
+        string password_hash
+        datetime created_at
+    }
+
+    companies {
+        int company_id PK
+        string name
+        string tax_id UK
+        string address
+        string contact_person
+        string phone
+        string email
+        text description
+    }
+
+    buildings {
+        int building_id PK
+        int company_id FK
+        string name
+        string address
+        int year_built
+        float total_area
+        text description
+    }
+
+    room_categories {
+        int category_id PK
+        string name
+        text description
+    }
+
+    rooms {
+        int room_id PK
+        int building_id FK "nullable"
+        int category_id FK
+        string room_number
+        int floor
+        float area
+        float price_per_month
+        string status
+        text description
+    }
+
+    leases {
+        int lease_id PK
+        int room_id FK
+        int tenant_id FK
+        datetime start_date
+        datetime end_date
+        float monthly_rent
+        float deposit
+        string status
+        datetime created_at
+    }
+
+    payments {
+        int payment_id PK
+        int lease_id FK
+        datetime payment_date
+        float amount
+        string payment_method
+        string status
+    }
+
+    reviews {
+        int review_id PK
+        int user_id FK
+        int room_id FK
+        int rating
+        text comment
+        datetime created_at
+    }
+
+    maintenance_requests {
+        int request_id PK
+        int room_id FK
+        int tenant_id FK
+        text description
+        string priority
+        string status
+        datetime created_at
+        datetime resolved_at
+    }
+
+    activity_log {
+        int log_id PK
+        int user_id FK
+        string action
+        datetime created_at
+    }
+
+    notifications {
+        int notification_id PK
+        int user_id FK
+        text message
+        datetime created_at
+        boolean is_read
+    }
+
+    favorites {
+        int favorite_id PK
+        int user_id FK
+        int room_id FK
+    }
+
+    room_photos {
+        int photo_id PK
+        int room_id FK
+        string photo_url
+        text description
+    }
+
+    lease_history {
+        int history_id PK
+        int lease_id FK
+        datetime change_date
+        string previous_status
+        string new_status
+        text comment
+    }
+        </div>
+    </div>
+
+    <div class="legend">
+        <h3>🔑 Обозначения:</h3>
+        <ul>
+            <li><strong>PK</strong> - Primary Key (первичный ключ)</li>
+            <li><strong>FK</strong> - Foreign Key (внешний ключ)</li>
+            <li><strong>UK</strong> - Unique Key (уникальный)</li>
+            <li><strong>||--o{</strong> - Один ко многим (One to Many)</li>
+        </ul>
+        <p><strong>Как сохранить в PNG:</strong></p>
+        <ol>
+            <li>Открой этот файл в браузере</li>
+            <li>Нажми правой кнопкой на диаграмму → "Сохранить изображение как..."</li>
+            <li>Или используй скриншот (Ctrl+Shift+S в Firefox/Chrome)</li>
+        </ol>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            er: {
+                layoutDirection: 'TB'
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+{
+  "name": "premises-rental-desktop",
+  "version": "1.0.0",
+  "description": "Premises Rental System - Desktop Application",
+  "main": "main.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kairenq/premises_rental.git"
+  },
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win --x64",
+    "build:all": "electron-builder --win --linux --mac"
+  },
+  "keywords": ["premises", "rental", "desktop"],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "dependencies": {},
+  "build": {
+    "appId": "com.premises.rental",
+    "productName": "Premises Rental System",
+    "publish": null,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "icon.ico"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "icon.ico",
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Premises Rental"
+    },
+    "linux": {
+      "target": ["AppImage"],
+      "category": "Office"
+    },
+    "mac": {
+      "target": ["dmg"],
+      "category": "public.app-category.business"
+    }
+  }
+}

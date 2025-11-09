@@ -1,0 +1,75 @@
+name: Build Desktop Application
+
+on:
+  push:
+    branches: [ main, master, claude/* ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Позволяет запускать вручную
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js 18
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    # ===== ELECTRON BUILD =====
+    - name: Install Electron dependencies
+      run: |
+        cd electron
+        npm install
+
+    - name: Build Electron Application
+      run: |
+        cd electron
+        npm run build
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Verify Electron Build
+      run: |
+        $installerPath = Get-ChildItem -Path "electron\dist" -Filter "*.exe" -Recurse | Select-Object -First 1
+        if ($installerPath) {
+          Write-Host "✅ Electron installer created: $($installerPath.Name)"
+          Write-Host "   Size: $([math]::Round($installerPath.Length / 1MB, 2)) MB"
+          Write-Host "   Path: $($installerPath.FullName)"
+        } else {
+          Write-Error "❌ Electron installer not found!"
+          exit 1
+        }
+      shell: pwsh
+
+    # ===== UPLOAD ARTIFACTS =====
+    - name: Upload Installer
+      uses: actions/upload-artifact@v4
+      with:
+        name: Premises-Rental-Windows-Installer
+        path: electron/dist/*.exe
+        retention-days: 30
+
+    - name: Upload Portable Version
+      uses: actions/upload-artifact@v4
+      with:
+        name: Premises-Rental-Windows-Portable
+        path: electron/dist/win-unpacked/
+        retention-days: 30
+
+    # ===== CREATE RELEASE (only on tags) =====
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          electron/dist/*.exe
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,149 @@
+erDiagram
+    users ||--o{ activity_log : "создает"
+    users ||--o{ notifications : "получает"
+    users ||--o{ reviews : "пишет"
+    users ||--o{ favorites : "добавляет"
+    users ||--o{ leases : "арендует"
+    users ||--o{ maintenance_requests : "создает"
+
+    companies ||--o{ buildings : "владеет"
+
+    buildings ||--o{ rooms : "содержит"
+
+    room_categories ||--o{ rooms : "классифицирует"
+
+    rooms ||--o{ room_photos : "имеет"
+    rooms ||--o{ reviews : "оценивается"
+    rooms ||--o{ favorites : "добавляется_в"
+    rooms ||--o{ leases : "сдается"
+    rooms ||--o{ maintenance_requests : "обслуживается"
+
+    leases ||--o{ payments : "оплачивается"
+    leases ||--o{ lease_history : "история"
+
+    users {
+        int user_id PK
+        string full_name
+        string email UK
+        string phone
+        string role
+        string password_hash
+        datetime created_at
+    }
+
+    companies {
+        int company_id PK
+        string name
+        string tax_id UK
+        string address
+        string contact_person
+        string phone
+        string email
+        text description
+    }
+
+    buildings {
+        int building_id PK
+        int company_id FK
+        string name
+        string address
+        int year_built
+        float total_area
+        text description
+    }
+
+    room_categories {
+        int category_id PK
+        string name
+        text description
+    }
+
+    rooms {
+        int room_id PK
+        int building_id FK "nullable"
+        int category_id FK
+        string room_number
+        int floor
+        float area
+        float price_per_month
+        string status
+        text description
+    }
+
+    leases {
+        int lease_id PK
+        int room_id FK
+        int tenant_id FK
+        datetime start_date
+        datetime end_date
+        float monthly_rent
+        float deposit
+        string status
+        datetime created_at
+    }
+
+    payments {
+        int payment_id PK
+        int lease_id FK
+        datetime payment_date
+        float amount
+        string payment_method
+        string status
+    }
+
+    reviews {
+        int review_id PK
+        int user_id FK
+        int room_id FK
+        int rating
+        text comment
+        datetime created_at
+    }
+
+    maintenance_requests {
+        int request_id PK
+        int room_id FK
+        int tenant_id FK
+        text description
+        string priority
+        string status
+        datetime created_at
+        datetime resolved_at
+    }
+
+    activity_log {
+        int log_id PK
+        int user_id FK
+        string action
+        datetime created_at
+    }
+
+    notifications {
+        int notification_id PK
+        int user_id FK
+        text message
+        datetime created_at
+        boolean is_read
+    }
+
+    favorites {
+        int favorite_id PK
+        int user_id FK
+        int room_id FK
+    }
+
+    room_photos {
+        int photo_id PK
+        int room_id FK
+        string photo_url
+        text description
+    }
+
+    lease_history {
+        int history_id PK
+        int lease_id FK
+        datetime change_date
+        string previous_status
+        string new_status
+        text comment
+    }
