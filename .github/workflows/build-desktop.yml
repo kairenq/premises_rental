@@ -25,8 +25,6 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: '**/package.json'
 
     # ===== BACKEND BUILD =====
     - name: Install Python dependencies
@@ -56,7 +54,7 @@ jobs:
     - name: Install Frontend dependencies
       run: |
         cd frontend
-        npm ci
+        npm install
 
     - name: Build Frontend
       run: |
@@ -99,7 +97,7 @@ jobs:
     - name: Install Electron dependencies
       run: |
         cd electron
-        npm ci
+        npm install
 
     # ===== ELECTRON BUILD =====
     - name: Build Electron Application
